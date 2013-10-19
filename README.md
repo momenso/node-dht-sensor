@@ -17,7 +17,9 @@ The first step is initializing the sensor by specifying the sensor type and whic
 This sample queries the sensor every 1.5 seconds and displays the result on the console. 
 
 ```javascript
-var sensorLib = require('node-dht-sensor'); var sensor = {
+var sensorLib = require('node-dht-sensor');
+
+var sensor = {
   initialize: function() {
     return sensorLib.initialize(11, 4);
   },
@@ -29,6 +31,7 @@ var sensorLib = require('node-dht-sensor'); var sensor = {
     }, 1500);
   }
 };
+
 if (sensor.initialize()) {
   sensor.read();
 } else {
