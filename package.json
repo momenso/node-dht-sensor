@@ -4,7 +4,7 @@
   "description": "Read data from DHT sensors on Raspberry Pi",
   "version": "0.0.1",
   "repository": {
-    "url": ""
+    "url": "https://github.com/momenso/node-dht-sensor"
   },
   "main": "./build/Release/node-dht-sensor",
   "dependencies": {}
