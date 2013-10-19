@@ -14,8 +14,8 @@ This module uses the [BCM2835](http://www.airspayce.com/mikem/bcm2835/) library 
 
 This sample queries the sensor every 1.5 seconds and displays the result on the console. 
 
-```javascript var 
-sensorLib = require('./build/Release/node-dht-sensor'); var sensor = {
+```javascript
+var sensorLib = require('./build/Release/node-dht-sensor'); var sensor = {
   initialize: function() {
     return sensorLib.initialize(11, 4);
   },
