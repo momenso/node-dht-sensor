@@ -33,7 +33,7 @@ int bitidx = 0;
 #endif
 int data[100];
 
-long readDHT(int type, int pin)
+long readDHT(int type, int pin, float &temperature, float &humidity)
 {
   //int bits[250], data[100];
   //int bitidx = 0;
@@ -60,7 +60,7 @@ long readDHT(int type, int pin)
   }
 
   // read data!
-  for (int i=0; i< MAXTIMINGS; i++) {
+  for (int i = 0; i < MAXTIMINGS; i++) {
     counter = 0;
     while (bcm2835_gpio_lev(pin) == laststate) {
 	counter++;
@@ -87,8 +87,10 @@ long readDHT(int type, int pin)
      // yay!
      if (type == DHT11) {
 	//printf("Temp = %d *C, Hum = %d \%\n", data[2], data[0]);
-        result = data[0];
-	result += data[2] * 1000;
+        //result = data[0];
+	//result += data[2] * 1000;
+	temperature = data[0];
+	humidity = data[2];
      }
      if (type == DHT22) {
 	float f, h;
@@ -99,8 +101,10 @@ long readDHT(int type, int pin)
         f /= 10.0;
         if (data[2] & 0x80)  f *= -1;
 	//printf("Temp =  %.1f *C, Hum = %.1f \%\n", f, h);
-	result = (int)h;
-        result += ((int)f) * 1000;
+	//result = (int)h;
+        //result += ((int)f) * 1000;
+	temperature = f;
+        humidity = h;
     }
     return result;
   }
@@ -124,13 +128,15 @@ int SensorType = 11;
 Handle<Value> Read(const Arguments& args) {
   HandleScope scope;
 
-  long value = readDHT(SensorType, GPIOPort);
-  int humidity = value % 1000;
-  int temperature = (value - humidity) / 1000;
+  float temperature, humidity;
+  //long value = 
+  readDHT(SensorType, GPIOPort, temperature, humidity);
+  //int humidity = value % 1000;
+  //int temperature = (value - humidity) / 1000;
 
   Local<Object> readout = Object::New();
-  readout->Set(String::NewSymbol("humidity"), Integer::New(humidity));
-  readout->Set(String::NewSymbol("temperature"), Integer::New(temperature));
+  readout->Set(String::NewSymbol("humidity"), Number::New(humidity));
+  readout->Set(String::NewSymbol("temperature"), Number::New(temperature));
 
   return scope.Close(readout);
 }

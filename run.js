@@ -5,15 +5,16 @@ var sensorLib = require('./build/Release/node-dht-sensor');
 
 var sensor = {
   initialize: function() {
-    return sensorLib.initialize(11, 4);
+    return sensorLib.initialize(22, 4);
   },
 
   read: function() {
     var readout = sensorLib.read();
-    console.log('Temperature: '+readout.temperature+'C, humidity: '+readout.humidity+'%');
+    if (readout.humidity != 0 && readout.temperature != 0)
+      console.log('Temperature: '+readout.temperature.toFixed(1)+'C, humidity: '+readout.humidity.toFixed(1)+'%');
     setTimeout(function() {
       sensor.read();
-    }, 1500);
+    }, 2000);
   }
 };
 
