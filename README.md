@@ -10,11 +10,11 @@ This node.js module supports querying air temperature and relative humidity from
 This module uses the [BCM2835](http://www.airspayce.com/mikem/bcm2835/) library that requires access to 
 /open/mem. Because of this, you will typically run node with admin privileges.
 
-The first step is initializing the sensor by specifying the sensor type and which GPIO pin the sensor is connected. Currently, only DHT11 sensor has been tested, but DHT22 sensors should also work. If the initialization succeeds when you can call the read function to obtain the latest readout from the sensor. Readout values contains a temperature and a humidity property.
+The first step is initializing the sensor by specifying the sensor type and which GPIO pin the sensor is connected. It should work for DHT11, DHT22 and AM2302 sensors. If the initialization succeeds when you can call the read function to obtain the latest readout from the sensor. Readout values contains a temperature and a humidity property.
 
 ### Example
 
-This sample queries the sensor every 1.5 seconds and displays the result on the console. 
+This sample queries the AM2302 sensor every 1.5 seconds and displays the result on the console. 
 
 ```javascript
 var sensorLib = require('node-dht-sensor');
@@ -25,7 +25,7 @@ var sensor = {
   },
   read: function() {
     var readout = sensorLib.read();
-    console.log('Temperature: '+readout.temperature+'C, humidity: '+readout.humidity+'%');
+    console.log('Temperature: '+readout.temperature.toFixed(2)+'C, humidity: '+readout.humidity.toFixed(2)+'%');
     setTimeout(function() {
       sensor.read();
     }, 1500);
