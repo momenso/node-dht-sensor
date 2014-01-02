@@ -14,14 +14,14 @@ The first step is initializing the sensor by specifying the sensor type and whic
 
 ### Example
 
-This sample queries the AM2302 sensor every 1.5 seconds and displays the result on the console. 
+This sample queries the AM2302 sensor connected to the GPIO 4 every 1.5 seconds and displays the result on the console. 
 
 ```javascript
 var sensorLib = require('node-dht-sensor');
 
 var sensor = {
   initialize: function() {
-    return sensorLib.initialize(11, 4);
+    return sensorLib.initialize(22, 4);
   },
   read: function() {
     var readout = sensorLib.read();
