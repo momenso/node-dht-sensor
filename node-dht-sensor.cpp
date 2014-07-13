@@ -89,8 +89,8 @@ long readDHT(int type, int pin, float &temperature, float &humidity)
 	//printf("Temp = %d *C, Hum = %d \%\n", data[2], data[0]);
         //result = data[0];
 	//result += data[2] * 1000;
-	temperature = data[0];
-	humidity = data[2];
+	temperature = data[2];
+	humidity = data[0];
      }
      if (type == DHT22) {
 	float f, h;
