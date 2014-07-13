@@ -23,8 +23,8 @@
 
 #define MAXTIMINGS 100
 
-#define DHT11 11
-#define DHT22 22
+#define DHT11  11
+#define DHT22  22
 #define AM2302 22
 
 #ifdef DEBUG
@@ -129,10 +129,7 @@ Handle<Value> Read(const Arguments& args) {
   HandleScope scope;
 
   float temperature, humidity;
-  //long value = 
   readDHT(SensorType, GPIOPort, temperature, humidity);
-  //int humidity = value % 1000;
-  //int temperature = (value - humidity) / 1000;
 
   Local<Object> readout = Object::New();
   readout->Set(String::NewSymbol("humidity"), Number::New(humidity));
