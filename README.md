@@ -38,3 +38,33 @@ if (sensor.initialize()) {
   console.warn('Failed to initialize sensor');
 }
 ```
+
+## Reference for building from source
+
+Standard node-gyp commands are used to build the module.
+
+1. Generate the configuration files
+```
+node-gyp configure
+```
+2. Build the component
+```
+node-gyp build
+```
+
+### Verbose output
+
+Verbose output from the module can be enabled by defining ```VERBOSE``` during the module compilation. For example, this can be enabled via the binging,gyp file:
+
+```javascript
+{
+  'targets': [
+    {
+      'target_name': 'node-dht-sensor',
+      'sources': [ 'node-dht-sensor.cpp' ],
+      'libraries': [ '-lbcm2835' ],
+      'defines': [ 'VERBOSE']
+    }
+  ]
+}
+```
