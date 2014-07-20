@@ -39,8 +39,9 @@ long readDHT(int type, int pin, float &temperature, float &humidity)
     int counter = 0;
     int laststate = HIGH;
     int j=0;
-//    bitidx = 0;
-
+#ifdef VERBOSE
+    bitidx = 0;
+#endif
     // Set GPIO pin to output
     bcm2835_gpio_fsel(pin, BCM2835_GPIO_FSEL_OUTP);
     
@@ -72,13 +73,13 @@ long readDHT(int type, int pin, float &temperature, float &humidity)
         }
         laststate = bcm2835_gpio_lev(pin);
         if (counter == 1000) break;
-/*#ifdef VERBOSE
+#ifdef VERBOSE
         if (bitidx < 1000) {
             bits[bitidx++] = counter;
         } else {
             printf("WARNING: bits buffer blew up!");
         }
-#endif*/
+#endif
         
         if ((i>3) && (i%2 == 0)) {
             // shove each bit into the storage bytes
