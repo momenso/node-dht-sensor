@@ -1,20 +1,29 @@
 // Module node-dht-sensor demo
 // Reads relative air humidity from DHT sensor
 
+var fs = require('fs');
 var sensorLib = require('./build/Release/node-dht-sensor');
 
 var sensor = {
   initialize: function() {
-    return sensorLib.initialize(22, 4);
+    this.totalReads = 0;
+    return sensorLib.initialize(11, 4);
   },
 
   read: function() {
     var readout = sensorLib.read();
-    if (readout.humidity != 0 && readout.temperature != 0)
-      console.log('Temperature: '+readout.temperature.toFixed(1)+'C, humidity: '+readout.humidity.toFixed(1)+'%');
-    setTimeout(function() {
-      sensor.read();
-    }, 1000);
+    this.totalReads++;
+    console.log('Temperature: '+readout.temperature.toFixed(1)+'C, humidity: '+readout.humidity.toFixed(1)+'%'+
+                ', valid: '+readout.isValid+
+                ', errors: '+readout.errors);
+    fs.appendFile('log.csv', 
+      new Date().getTime()+','+readout.temperature+','+readout.humidity+',"'+(readout.checksum ? 'Ok' : 'Failed')+'",'+readout.errors+'\n', 
+      function (err) { });
+    if (this.totalReads < 300) {
+      setTimeout(function() {
+        sensor.read();
+      }, 1500);
+    }
   }
 };
 

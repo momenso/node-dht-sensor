@@ -20,6 +20,7 @@
 #include <sys/time.h>
 #include <bcm2835.h>
 #include <unistd.h>
+#include <sched.h>
 
 #define MAXTIMINGS 100
 
@@ -38,23 +39,27 @@ long readDHT(int type, int pin, float &temperature, float &humidity)
     int counter = 0;
     int laststate = HIGH;
     int j=0;
-    int result=-1;
-    
+//    bitidx = 0;
+
     // Set GPIO pin to output
     bcm2835_gpio_fsel(pin, BCM2835_GPIO_FSEL_OUTP);
     
     bcm2835_gpio_write(pin, HIGH);
-    usleep(500000);  // 500 ms
+    bcm2835_delay(400);
     bcm2835_gpio_write(pin, LOW);
-    usleep(20000);   // 20 ms
+    bcm2835_delay(20);
     
     bcm2835_gpio_fsel(pin, BCM2835_GPIO_FSEL_INPT);
-    
+
     data[0] = data[1] = data[2] = data[3] = data[4] = 0;
     
     // wait for pin to drop?
+    int timeout = 100000;
     while (bcm2835_gpio_lev(pin) == 1) {
-        usleep(1);
+        if (--timeout < 0) {
+            return -3;
+        }
+        bcm2835_delayMicroseconds(1); //usleep(1);
     }
     
     // read data!
@@ -67,13 +72,13 @@ long readDHT(int type, int pin, float &temperature, float &humidity)
         }
         laststate = bcm2835_gpio_lev(pin);
         if (counter == 1000) break;
-#ifdef VERBOSE
+/*#ifdef VERBOSE
         if (bitidx < 1000) {
             bits[bitidx++] = counter;
         } else {
             printf("WARNING: bits buffer blew up!");
         }
-#endif
+#endif*/
         
         if ((i>3) && (i%2 == 0)) {
             // shove each bit into the storage bytes
@@ -113,21 +118,30 @@ long readDHT(int type, int pin, float &temperature, float &humidity)
             temperature = f;
             humidity = h;
         }
-        return result;
+        else
+        {
+            return -2;
+        }
     }
-#ifdef VERBOSE
     else
     {
+#ifdef VERBOSE
         printf("Unexpected data: j=%d: %d != %d + %d + %d + %d\n",
                j, data[4], data[0], data[1], data[2], data[3]);
-    }
 #endif
+        return -1;
+    }
     
     return 0;
 }
 
 int initialize()
 {
+    // set up real-time scheduling
+    struct sched_param schedp;
+    schedp.sched_priority = 1;
+    sched_setscheduler(0, SCHED_FIFO, &schedp);
+
     if (!bcm2835_init())
         return 1;
     else
@@ -143,12 +157,18 @@ Handle<Value> Read(const Arguments& args) {
     HandleScope scope;
     
     float temperature, humidity;
-    readDHT(SensorType, GPIOPort, temperature, humidity);
-    
+    int retry = 3;
+    int result = 0;
+    do {
+        result = readDHT(SensorType, GPIOPort, temperature, humidity);
+        if (--retry < 0) break;
+    } while (result != 0);
+
     Local<Object> readout = Object::New();
     readout->Set(String::NewSymbol("humidity"), Number::New(humidity));
     readout->Set(String::NewSymbol("temperature"), Number::New(temperature));
-    
+    readout->Set(String::NewSymbol("isValid"), Boolean::New(result == 0));
+    readout->Set(String::NewSymbol("errors"), Number::New(2 - retry));
     return scope.Close(readout);
 }
 
