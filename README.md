@@ -22,22 +22,27 @@ This sample queries the AM2302 sensor connected to the GPIO 4 every 1.5 seconds 
 var sensorLib = require('node-dht-sensor');
 
 var sensor = {
-  initialize: function() {
-    return sensorLib.initialize(22, 4);
-  },
-  read: function() {
-    var readout = sensorLib.read();
-    console.log('Temperature: '+readout.temperature.toFixed(2)+'C, humidity: '+readout.humidity.toFixed(2)+'%');
-    setTimeout(function() {
-      sensor.read();
-    }, 1500);
-  }
+    initialize: function () {
+        return sensorLib.initialize(22, 4);
+    },
+    read: function () {
+        var readout = sensorLib.read();
+        if (!readout.isValid) {
+            console.log('Sensor returned invalid data, trying to read again...');
+            readout = sensor.read();
+        } else
+            console.log('Temperature: ' + readout.temperature.toFixed(2) + 'C, ' +
+                'humidity: ' + readout.humidity.toFixed(2) + '%');
+        setTimeout(function () {
+            sensor.read();
+        }, 2000);
+    }
 };
 
 if (sensor.initialize()) {
-  sensor.read();
+    sensor.read();
 } else {
-  console.warn('Failed to initialize sensor');
+    console.warn('Failed to initialize sensor');
 }
 ```
 
