@@ -27,12 +27,8 @@ var sensor = {
     },
     read: function () {
         var readout = sensorLib.read();
-        if (!readout.isValid) {
-            console.log('Sensor returned invalid data, trying to read again...');
-            readout = sensor.read();
-        } else
-            console.log('Temperature: ' + readout.temperature.toFixed(2) + 'C, ' +
-                'humidity: ' + readout.humidity.toFixed(2) + '%');
+        console.log('Temperature: ' + readout.temperature.toFixed(2) + 'C, ' +
+            'humidity: ' + readout.humidity.toFixed(2) + '%');
         setTimeout(function () {
             sensor.read();
         }, 2000);
