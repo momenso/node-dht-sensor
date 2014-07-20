@@ -3,7 +3,9 @@
 This node.js module supports querying air temperature and relative humidity from a compatible DHT sensor.
 
 ## Installation
-    $ npm install node-dht-sensor
+``` bash
+$ npm install node-dht-sensor
+```
 
 ## Usage
 
@@ -16,7 +18,7 @@ The first step is initializing the sensor by specifying the sensor type and whic
 
 This sample queries the AM2302 sensor connected to the GPIO 4 every 1.5 seconds and displays the result on the console. 
 
-```javascript
+``` javascript
 var sensorLib = require('node-dht-sensor');
 
 var sensor = {
@@ -38,3 +40,42 @@ if (sensor.initialize()) {
   console.warn('Failed to initialize sensor');
 }
 ```
+
+## Reference for building from source
+
+Standard node-gyp commands are used to build the module.
+
+1. Generate the configuration files
+``` bash
+$ node-gyp configure
+```
+2. Build the component
+``` bash
+$ node-gyp build
+```
+
+### Verbose output
+
+Verbose output from the module can be enabled by defining ```VERBOSE``` during the module compilation. For example, this can be enabled via the binging,gyp file:
+
+``` javascript
+{
+  'targets': [
+    {
+      'target_name': 'node-dht-sensor',
+      'sources': [ 'node-dht-sensor.cpp' ],
+      'libraries': [ '-lbcm2835' ],
+      'defines': [ 'VERBOSE']
+    }
+  ]
+}
+```
+
+### References
+
+[1]: Node.js latest release - http://nodejs.org/dist/latest/
+
+[2]: BCM2835 - http://www.airspayce.com/mikem/bcm2835/
+
+[3]: Node.js native addon build tool - https://github.com/TooTallNate/node-gyp
+
