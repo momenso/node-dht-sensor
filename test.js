@@ -7,7 +7,7 @@ var sensorLib = require('./build/Release/node-dht-sensor');
 var sensor = {
   initialize: function() {
     this.totalReads = 0;
-    return sensorLib.initialize(11, 4);
+    return sensorLib.initialize(22, 4);
   },
 
   read: function() {
@@ -22,7 +22,7 @@ var sensor = {
     if (this.totalReads < 300) {
       setTimeout(function() {
         sensor.read();
-      }, 1500);
+      }, 500);
     }
   }
 };

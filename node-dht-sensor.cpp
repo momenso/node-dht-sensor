@@ -33,6 +33,18 @@ int bits[1000];
 int bitidx = 0;
 #endif
 int data[100];
+unsigned long long last_read = 0;
+float last_temperature = 0;
+float last_humidity = 0;
+
+unsigned long long getTime()
+{
+  struct timeval tv;
+  gettimeofday(&tv, NULL);
+  unsigned long long time = (unsigned long long)(tv.tv_sec)*1000 +
+                            (unsigned long long)(tv.tv_usec)/1000;
+  return time;
+}
 
 long readDHT(int type, int pin, float &temperature, float &humidity)
 {
@@ -42,6 +54,19 @@ long readDHT(int type, int pin, float &temperature, float &humidity)
 #ifdef VERBOSE
     bitidx = 0;
 #endif
+
+    unsigned long long now = getTime();
+    if (now - last_read < 2000) {
+#ifdef VERBOSE
+       printf("Too early to read again: %llu\n", now - last_read);
+#endif
+       temperature = last_temperature;
+       humidity = last_humidity;
+       return 0;
+    } else {
+       last_read = now + 420;
+    }
+
     // Set GPIO pin to output
     bcm2835_gpio_fsel(pin, BCM2835_GPIO_FSEL_OUTP);
     
@@ -58,6 +83,9 @@ long readDHT(int type, int pin, float &temperature, float &humidity)
     int timeout = 100000;
     while (bcm2835_gpio_lev(pin) == 1) {
         if (--timeout < 0) {
+#ifdef VERBOSE
+            printf("Sensor timeout.\n");
+#endif
             return -3;
         }
         bcm2835_delayMicroseconds(1); //usleep(1);
@@ -77,7 +105,7 @@ long readDHT(int type, int pin, float &temperature, float &humidity)
         if (bitidx < 1000) {
             bits[bitidx++] = counter;
         } else {
-            printf("WARNING: bits buffer blew up!");
+            printf("WARNING: bits buffer blew up!\n");
         }
 #endif
         
@@ -133,6 +161,13 @@ long readDHT(int type, int pin, float &temperature, float &humidity)
         return -1;
     }
     
+#ifdef VERBOSE
+    printf("Obtained readout successfully.\n");
+#endif
+
+    // update last readout
+    last_temperature = temperature;
+    last_humidity = humidity;
     return 0;
 }
 
@@ -144,9 +179,19 @@ int initialize()
     sched_setscheduler(0, SCHED_FIFO, &schedp);
 
     if (!bcm2835_init())
+    {
+#ifdef VERBOSE
+        printf("BCM2835 initialization failed.\n");
+#endif
         return 1;
+    }
     else
+    {
+#ifdef VERBOSE
+        printf("BCM2835 initialized.\n");
+#endif
         return 0;
+    }
 }
 
 using namespace v8;
@@ -157,7 +202,7 @@ int SensorType = 11;
 Handle<Value> Read(const Arguments& args) {
     HandleScope scope;
     
-    float temperature, humidity;
+    float temperature = 0, humidity = 0;
     int retry = 3;
     int result = 0;
     do {
