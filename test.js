@@ -7,7 +7,7 @@ var sensorLib = require('./build/Release/node-dht-sensor');
 var sensor = {
   initialize: function() {
     this.totalReads = 0;
-    return sensorLib.initialize(22, 4);
+    return sensorLib.initialize(11, 17);
   },
 
   read: function() {

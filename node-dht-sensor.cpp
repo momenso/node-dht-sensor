@@ -32,10 +32,11 @@
 int bits[1000];
 int bitidx = 0;
 #endif
+int initialized = 0;
 int data[100];
-unsigned long long last_read = 0;
-float last_temperature = 0;
-float last_humidity = 0;
+unsigned long long last_read[32];
+float last_temperature[32] = {};
+float last_humidity[32] = {};
 
 unsigned long long getTime()
 {
@@ -56,15 +57,15 @@ long readDHT(int type, int pin, float &temperature, float &humidity)
 #endif
 
     unsigned long long now = getTime();
-    if (now - last_read < 2000) {
+    if (now - last_read[pin] < 2000) {
 #ifdef VERBOSE
-       printf("Too early to read again: %llu\n", now - last_read);
+       printf("Too early to read again pin %d: %llu\n", pin, now - last_read[pin]);
 #endif
-       temperature = last_temperature;
-       humidity = last_humidity;
+       temperature = last_temperature[pin];
+       humidity = last_humidity[pin];
        return 0;
     } else {
-       last_read = now + 420;
+       last_read[pin] = now + 420;
     }
 
     // Set GPIO pin to output
@@ -166,8 +167,8 @@ long readDHT(int type, int pin, float &temperature, float &humidity)
 #endif
 
     // update last readout
-    last_temperature = temperature;
-    last_humidity = humidity;
+    last_temperature[pin] = temperature;
+    last_humidity[pin] = humidity;
     return 0;
 }
 
@@ -190,6 +191,8 @@ int initialize()
 #ifdef VERBOSE
         printf("BCM2835 initialized.\n");
 #endif
+        initialized = 1;
+        memset(last_read, 0, sizeof(unsigned long long)*32);
         return 0;
     }
 }
@@ -207,6 +210,45 @@ Handle<Value> Read(const Arguments& args) {
     int result = 0;
     do {
         result = readDHT(SensorType, GPIOPort, temperature, humidity);
+        if (--retry < 0) break;
+    } while (result != 0);
+
+    Local<Object> readout = Object::New();
+    readout->Set(String::NewSymbol("humidity"), Number::New(humidity));
+    readout->Set(String::NewSymbol("temperature"), Number::New(temperature));
+    readout->Set(String::NewSymbol("isValid"), Boolean::New(result == 0));
+    readout->Set(String::NewSymbol("errors"), Number::New(2 - retry));
+    return scope.Close(readout);
+}
+
+Handle<Value> ReadSpec(const Arguments& args) {
+    HandleScope scope;
+    
+    if (args.Length() < 2) {
+       ThrowException(Exception::TypeError(String::New("Wrong number of arguments")));
+       return scope.Close(Undefined());
+    }
+
+    int sensorType = args[0]->Uint32Value();
+    if (sensorType != 11 && sensorType != 22) {
+        ThrowException(Exception::TypeError(String::New("Specified sensor type is invalid.")));
+        return scope.Close(Undefined());
+    }
+
+    if (!initialized) {
+        initialized = initialize() == 0;
+        if (!initialized) {
+            ThrowException(Exception::TypeError(String::New("Failed to initialize.")));
+            return scope.Close(Undefined());
+        }
+    }
+
+    int gpio = args[1]->Uint32Value();
+    float temperature = 0, humidity = 0;
+    int retry = 3;
+    int result = 0;
+    do {
+        result = readDHT(sensorType, gpio, temperature, humidity);
         if (--retry < 0) break;
     } while (result != 0);
 
@@ -247,6 +289,8 @@ Handle<Value> Initialize(const Arguments& args) {
 void RegisterModule(v8::Handle<v8::Object> target) {
     target->Set(String::NewSymbol("read"),
                 FunctionTemplate::New(Read)->GetFunction());
+    target->Set(String::NewSymbol("readSpec"),
+                FunctionTemplate::New(ReadSpec)->GetFunction());
     target->Set(String::NewSymbol("initialize"),
                 FunctionTemplate::New(Initialize)->GetFunction());
 }
