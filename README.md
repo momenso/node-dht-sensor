@@ -14,7 +14,7 @@ This module uses the [BCM2835](http://www.airspayce.com/mikem/bcm2835/) library 
 
 The first step is initializing the sensor by specifying the sensor type and which GPIO pin the sensor is connected. It should work for DHT11, DHT22 and AM2302 sensors. If the initialization succeeds when you can call the read function to obtain the latest readout from the sensor. Readout values contains a temperature and a humidity property.
 
-### Example
+### First Example
 
 This sample queries the AM2302 sensor connected to the GPIO 4 every 2 seconds and displays the result on the console. 
 
@@ -42,7 +42,44 @@ if (sensor.initialize()) {
 }
 ```
 
-## Reference for building from source
+### Multiple Sensors Example
+
+The following example shows a method for querying multiple sensors connected to the same Raspberry Pi. For this example, we have two sensors:
+
+1. A DHT11 sensor connected to GPIO 17
+2. High-resolution DHT22 sensor connected to GPIO 4
+
+``` javascript
+var sensorLib = require("node-dht-sensor");
+
+var sensor = {
+    sensors: [ {
+        name: "Indoor",
+        type: 11,
+        pin: 17
+    }, {
+        name: "Outdoor",
+        type: 22,
+        pin: 4
+    } ],
+    read: function() {
+        for (var a in this.sensors) {
+            var b = sensorLib.readSpec(this.sensors[a].type, this.sensors[a].pin);
+            console.log(this.sensors[a].name + ": " + 
+              b.temperature.toFixed(1) + "C, " + 
+              b.humidity.toFixed(1) + "%");
+        }
+        setTimeout(function() {
+            sensor.read();
+        }, 2000);
+    }
+};
+
+sensor.read();
+```
+
+
+### Reference for building from source
 
 Standard node-gyp commands are used to build the module.
 
@@ -71,6 +108,15 @@ Verbose output from the module can be enabled by defining ```VERBOSE``` during t
   ]
 }
 ```
+
+### Appendix A: Quick Node.js installation guide
+
+There are many ways you can get Node.js installed on your Raspberry Pi but the following method is very convenient for getting started on the latest version, very quickly.
+``` shell
+$ wget http://node-arm.herokuapp.com/node_latest_armhf.deb 
+$ sudo dpkg -i node_latest_armhf.deb
+```
+
 
 ### References
 
