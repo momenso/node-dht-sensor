@@ -18,7 +18,7 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <sys/time.h>
-#include <bcm2835.h>
+#include <wiringPi.h>
 #include <unistd.h>
 #include <sched.h>
 
@@ -69,38 +69,39 @@ long readDHT(int type, int pin, float &temperature, float &humidity)
     }
 
     // Set GPIO pin to output
-    bcm2835_gpio_fsel(pin, BCM2835_GPIO_FSEL_OUTP);
-    
-    bcm2835_gpio_write(pin, HIGH);
-    bcm2835_delay(400);
-    bcm2835_gpio_write(pin, LOW);
-    bcm2835_delay(20);
-    
-    bcm2835_gpio_fsel(pin, BCM2835_GPIO_FSEL_INPT);
+    pinMode (pin, OUTPUT);
 
+	digitalWrite (pin, HIGH);
+	delay(400);
+
+	digitalWrite (pin, LOW);
+    delay(20);
+
+	pinMode (pin, INPUT) ;
+	
     data[0] = data[1] = data[2] = data[3] = data[4] = 0;
     
     // wait for pin to drop?
     int timeout = 100000;
-    while (bcm2835_gpio_lev(pin) == 1) {
+    while (digitalRead (pin) == 1) {
         if (--timeout < 0) {
 #ifdef VERBOSE
             printf("Sensor timeout.\n");
 #endif
             return -3;
         }
-        bcm2835_delayMicroseconds(1); //usleep(1);
+        usleep(1);
     }
     
     // read data!
     for (int i = 0; i < MAXTIMINGS; i++) {
         counter = 0;
-        while (bcm2835_gpio_lev(pin) == laststate) {
+        while (digitalRead (pin) == laststate) {
             counter++;
             if (counter == 1000)
                 break;
         }
-        laststate = bcm2835_gpio_lev(pin);
+        laststate = digitalRead (pin);
         if (counter == 1000) break;
 #ifdef VERBOSE
         if (bitidx < 1000) {
@@ -178,23 +179,12 @@ int initialize()
     struct sched_param schedp;
     schedp.sched_priority = 1;
     sched_setscheduler(0, SCHED_FIFO, &schedp);
+	
+	wiringPiSetup ();
 
-    if (!bcm2835_init())
-    {
-#ifdef VERBOSE
-        printf("BCM2835 initialization failed.\n");
-#endif
-        return 1;
-    }
-    else
-    {
-#ifdef VERBOSE
-        printf("BCM2835 initialized.\n");
-#endif
-        initialized = 1;
-        memset(last_read, 0, sizeof(unsigned long long)*32);
-        return 0;
-    }
+	initialized = 1;
+	memset(last_read, 0, sizeof(unsigned long long)*32);
+	return 0;
 }
 
 using namespace v8;
