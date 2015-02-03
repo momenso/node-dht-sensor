@@ -1,3 +1,6 @@
+.DS_Store
+.AppleDouble
+
 lib-cov
 *.seed
 *.log
