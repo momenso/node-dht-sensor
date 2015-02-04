@@ -71,13 +71,13 @@ long readDHT(int type, int pin, float &temperature, float &humidity)
     // Set GPIO pin to output
     pinMode (pin, OUTPUT);
 
-	digitalWrite (pin, HIGH);
-	delay(400);
+    digitalWrite (pin, HIGH);
+    delay(500);
 
-	digitalWrite (pin, LOW);
+    digitalWrite (pin, LOW);
     delay(20);
 
-	pinMode (pin, INPUT) ;
+    pinMode (pin, INPUT) ;
 	
     data[0] = data[1] = data[2] = data[3] = data[4] = 0;
     
