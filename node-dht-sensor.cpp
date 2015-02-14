@@ -202,8 +202,9 @@ using namespace v8;
 int GPIOPort = 4;
 int SensorType = 11;
 
-Handle<Value> Read(const Arguments& args) {
-    HandleScope scope;
+void Read(const FunctionCallbackInfo<Value>& args) {
+    Isolate* isolate = Isolate::GetCurrent();
+    HandleScope scope(isolate);
     
     float temperature = 0, humidity = 0;
     int retry = 3;
@@ -213,33 +214,38 @@ Handle<Value> Read(const Arguments& args) {
         if (--retry < 0) break;
     } while (result != 0);
 
-    Local<Object> readout = Object::New();
-    readout->Set(String::NewSymbol("humidity"), Number::New(humidity));
-    readout->Set(String::NewSymbol("temperature"), Number::New(temperature));
-    readout->Set(String::NewSymbol("isValid"), Boolean::New(result == 0));
-    readout->Set(String::NewSymbol("errors"), Number::New(2 - retry));
-    return scope.Close(readout);
+    Local<Object> readout = Object::New(isolate);
+    readout->Set(String::NewFromUtf8(isolate, "humidity"), Number::New(isolate, humidity));
+    readout->Set(String::NewFromUtf8(isolate, "temperature"), Number::New(isolate, temperature));
+    readout->Set(String::NewFromUtf8(isolate, "isValid"), Boolean::New(isolate, result == 0));
+    readout->Set(String::NewFromUtf8(isolate, "errors"), Number::New(isolate, 2 - retry));
+    
+    args.GetReturnValue().Set(readout);
 }
 
-Handle<Value> ReadSpec(const Arguments& args) {
-    HandleScope scope;
+void ReadSpec(const FunctionCallbackInfo<Value>& args) {
+    Isolate* isolate = Isolate::GetCurrent();
+    HandleScope scope(isolate);
     
     if (args.Length() < 2) {
-       ThrowException(Exception::TypeError(String::New("Wrong number of arguments")));
-       return scope.Close(Undefined());
+    	isolate->ThrowException(Exception::TypeError(
+       		String::NewFromUtf8(isolate, "Wrong number of arguments")));
+    	return;
     }
 
     int sensorType = args[0]->Uint32Value();
     if (sensorType != 11 && sensorType != 22) {
-        ThrowException(Exception::TypeError(String::New("Specified sensor type is invalid.")));
-        return scope.Close(Undefined());
+        isolate->ThrowException(Exception::TypeError(
+       		String::NewFromUtf8(isolate, "Specified sensor type is invalid")));
+        return;
     }
 
     if (!initialized) {
         initialized = initialize() == 0;
         if (!initialized) {
-            ThrowException(Exception::TypeError(String::New("Failed to initialize.")));
-            return scope.Close(Undefined());
+        	isolate->ThrowException(Exception::TypeError(
+       			String::NewFromUtf8(isolate, "Failed to initialize")));
+        	return;
         }
     }
 
@@ -252,40 +258,46 @@ Handle<Value> ReadSpec(const Arguments& args) {
         if (--retry < 0) break;
     } while (result != 0);
 
-    Local<Object> readout = Object::New();
-    readout->Set(String::NewSymbol("humidity"), Number::New(humidity));
-    readout->Set(String::NewSymbol("temperature"), Number::New(temperature));
-    readout->Set(String::NewSymbol("isValid"), Boolean::New(result == 0));
-    readout->Set(String::NewSymbol("errors"), Number::New(2 - retry));
-    return scope.Close(readout);
+    Local<Object> readout = Object::New(isolate);
+    readout->Set(String::NewFromUtf8(isolate, "humidity"), Number::New(isolate, humidity));
+    readout->Set(String::NewFromUtf8(isolate, "temperature"), Number::New(isolate, temperature));
+    readout->Set(String::NewFromUtf8(isolate, "isValid"), Boolean::New(isolate, result == 0));
+    readout->Set(String::NewFromUtf8(isolate, "errors"), Number::New(isolate, 2 - retry));
+    
+    args.GetReturnValue().Set(readout);
 }
 
-Handle<Value> Initialize(const Arguments& args) {
-    HandleScope scope;
+void Initialize(const FunctionCallbackInfo<Value>& args) {
+    Isolate* isolate = Isolate::GetCurrent();
+    HandleScope scope(isolate);
     
     if (args.Length() < 2) {
-        ThrowException(Exception::TypeError(String::New("Wrong number of arguments")));
-        return scope.Close(Undefined());
+        isolate->ThrowException(Exception::TypeError(
+       		String::NewFromUtf8(isolate, "Wrong number of arguments")));
+    	return;
     }
     
     if (!args[0]->IsNumber() || !args[1]->IsNumber()) {
-        ThrowException(Exception::TypeError(String::New("Wrong arguments")));
-        return scope.Close(Undefined());
+        isolate->ThrowException(Exception::TypeError(
+       		String::NewFromUtf8(isolate, "Invalid arguments")));
+    	return;
     }
     
     int sensorType = args[0]->Uint32Value();
     if (sensorType != 11 && sensorType != 22) {
-        ThrowException(Exception::TypeError(String::New("Specified sensor type is not supported")));
-        return scope.Close(Undefined());
+    	isolate->ThrowException(Exception::TypeError(
+       		String::NewFromUtf8(isolate, "Specified sensor type is not supported")));
+    	return;
     }
     
     // update parameters
     SensorType = sensorType;
     GPIOPort = args[1]->Uint32Value();
     
-    return scope.Close(v8::Boolean::New(initialize() == 0));
+    //return scope.Close(v8::Boolean::New(initialize() == 0));
+    args.GetReturnValue().Set(Boolean::New(isolate, initialize() == 0));
 }
-
+/*
 void RegisterModule(v8::Handle<v8::Object> target) {
     target->Set(String::NewSymbol("read"),
                 FunctionTemplate::New(Read)->GetFunction());
@@ -296,3 +308,12 @@ void RegisterModule(v8::Handle<v8::Object> target) {
 }
 
 NODE_MODULE(node_dht_sensor, RegisterModule);
+*/
+
+void Init(Handle<Object> exports) {
+  NODE_SET_METHOD(exports, "read", Read);
+  NODE_SET_METHOD(exports, "readSpec", ReadSpec);
+  NODE_SET_METHOD(exports, "initialize", Initialize);
+}
+
+NODE_MODULE(addon, Init);
