@@ -9,5 +9,5 @@
   "main": "./build/Release/node-dht-sensor",
   "dependencies": { },
   "engines" : { "node" : ">=0.12 <0.13" },
-  "license" : "LGPL" }
+  "license" : "LGPL"
 }
