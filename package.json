@@ -6,6 +6,9 @@
   "repository": {
     "url": "https://github.com/momenso/node-dht-sensor"
   },
+  "scripts": {
+    "install": "./check-bcm2835"
+  },
   "main": "./build/Release/node-dht-sensor",
   "dependencies": { },
   "engines" : { "node" : ">=0.12 <0.13" },
