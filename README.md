@@ -83,11 +83,15 @@ sensor.read();
 
 Standard node-gyp commands are used to build the module.
 
-1. Generate the configuration files
+1. In case, you don't have node-gyp, install it first:
+``` bash
+$ sudo npm install node-gyp -g
+```
+2. Generate the configuration files
 ``` bash
 $ node-gyp configure
 ```
-2. Build the component
+3. Build the component
 ``` bash
 $ node-gyp build
 ```
