@@ -134,8 +134,6 @@ $ sudo dpkg -i node_latest_armhf.deb
 
 ### Build Procedure
 
-I success at Raspberry PI 2. But I got some problems with installing node-dht-sensor module.
-
 Step:
 
 1.I install stable nodejs version, which includes node: 4.2.3, npm: 2.14.7. (P.S. Despite I install nodejs on my Raspberry PI Home folder, I do not use the current nodejs binary. That is, I use the older version nodejs with original on Raspberry PI (v0.10.29) and npm version 2.14.7. So it failed.
