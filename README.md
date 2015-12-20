@@ -132,3 +132,20 @@ $ sudo dpkg -i node_latest_armhf.deb
 
 [3]: Node.js native addon build tool - https://github.com/TooTallNate/node-gyp
 
+### Build Procedure
+
+Step:
+
+1.I install stable nodejs version, which includes node: 4.2.3, npm: 2.14.7. (P.S. Despite I install nodejs on my Raspberry PI Home folder, I do not use the current nodejs binary. That is, I use the older version nodejs with original on Raspberry PI (v0.10.29) and npm version 2.14.7. So it failed.
+
+2.Using npm to install node-gyp. (with -g or not. TBD)
+
+3.Download Broadcom Library on your board.
+URL is http://www.airspayce.com/mikem/bcm2835/bcm2835-1.46.tar.gz
+ - tar it
+ - ./configure
+ - make CFLAGS='-g -O2 -fPIC'
+ - sudo make check
+ - sudo make install
+
+4.I can install node-dht-sensor with npm successfully. 
