@@ -2,12 +2,12 @@
   "author": "David Momenso",
   "name": "node-dht-sensor",
   "description": "Reads data from DHT sensors on Raspberry Pi",
-  "version": "0.0.10",
+  "version": "0.0.11",
   "repository": {
     "url": "https://github.com/momenso/node-dht-sensor"
   },
   "scripts": {
-    "preinstall": "./check-bcm2835"
+    "preinstall": "./preinst"
   },
   "main": "./build/Release/node_dht_sensor",
   "dependencies": {
