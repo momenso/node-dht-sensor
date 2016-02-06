@@ -2,7 +2,7 @@
 // Reads relative air humidity from DHT sensor
 
 var fs = require('fs');
-var sensorLib = require('./build/Release/node-dht-sensor');
+var sensorLib = require('./build/Release/node_dht-sensor');
 
 var sensor = {
   initialize: function() {

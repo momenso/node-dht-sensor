@@ -197,15 +197,14 @@ int initialize()
     }
 }
 
+#include <nan.h>
+
 using namespace v8;
 
 int GPIOPort = 4;
 int SensorType = 11;
 
-void Read(const FunctionCallbackInfo<Value>& args) {
-    Isolate* isolate = Isolate::GetCurrent();
-    HandleScope scope(isolate);
-    
+void Read(const Nan::FunctionCallbackInfo<Value>& args) {
     float temperature = 0, humidity = 0;
     int retry = 3;
     int result = 0;
@@ -214,37 +213,31 @@ void Read(const FunctionCallbackInfo<Value>& args) {
         if (--retry < 0) break;
     } while (result != 0);
 
-    Local<Object> readout = Object::New(isolate);
-    readout->Set(String::NewFromUtf8(isolate, "humidity"), Number::New(isolate, humidity));
-    readout->Set(String::NewFromUtf8(isolate, "temperature"), Number::New(isolate, temperature));
-    readout->Set(String::NewFromUtf8(isolate, "isValid"), Boolean::New(isolate, result == 0));
-    readout->Set(String::NewFromUtf8(isolate, "errors"), Number::New(isolate, 2 - retry));
-    
+    Local<Object> readout = Nan::New<Object>();
+    readout->Set(Nan::New("humidity").ToLocalChecked(), Nan::New<Number>(humidity));
+    readout->Set(Nan::New("temperature").ToLocalChecked(), Nan::New<Number>(temperature));
+    readout->Set(Nan::New("isValid").ToLocalChecked(), Nan::New<Boolean>(result == 0));
+    readout->Set(Nan::New("errors").ToLocalChecked(), Nan::New<Number>(2 - retry));
+
     args.GetReturnValue().Set(readout);
 }
 
-void ReadSpec(const FunctionCallbackInfo<Value>& args) {
-    Isolate* isolate = Isolate::GetCurrent();
-    HandleScope scope(isolate);
-    
+void ReadSpec(const Nan::FunctionCallbackInfo<Value>& args) {
     if (args.Length() < 2) {
-    	isolate->ThrowException(Exception::TypeError(
-       		String::NewFromUtf8(isolate, "Wrong number of arguments")));
+    	Nan::ThrowTypeError("Wrong number of arguments");
     	return;
     }
 
     int sensorType = args[0]->Uint32Value();
     if (sensorType != 11 && sensorType != 22) {
-        isolate->ThrowException(Exception::TypeError(
-       		String::NewFromUtf8(isolate, "Specified sensor type is invalid")));
+        Nan::ThrowTypeError("Specified sensor type is invalid");
         return;
     }
 
     if (!initialized) {
         initialized = initialize() == 0;
         if (!initialized) {
-        	isolate->ThrowException(Exception::TypeError(
-       			String::NewFromUtf8(isolate, "Failed to initialize")));
+        	Nan::ThrowTypeError("Failed to initialize");
         	return;
         }
     }
@@ -258,35 +251,30 @@ void ReadSpec(const FunctionCallbackInfo<Value>& args) {
         if (--retry < 0) break;
     } while (result != 0);
 
-    Local<Object> readout = Object::New(isolate);
-    readout->Set(String::NewFromUtf8(isolate, "humidity"), Number::New(isolate, humidity));
-    readout->Set(String::NewFromUtf8(isolate, "temperature"), Number::New(isolate, temperature));
-    readout->Set(String::NewFromUtf8(isolate, "isValid"), Boolean::New(isolate, result == 0));
-    readout->Set(String::NewFromUtf8(isolate, "errors"), Number::New(isolate, 2 - retry));
+    Local<Object> readout = Nan::New<Object>();
+    readout->Set(Nan::New("humidity").ToLocalChecked(), Nan::New<Number>(humidity));
+    readout->Set(Nan::New("temperature").ToLocalChecked(), Nan::New<Number>(temperature));
+    readout->Set(Nan::New("isValid").ToLocalChecked(), Nan::New<Boolean>(result == 0));
+    readout->Set(Nan::New("errors").ToLocalChecked(), Nan::New<Number>(2 - retry));
     
     args.GetReturnValue().Set(readout);
 }
 
-void Initialize(const FunctionCallbackInfo<Value>& args) {
-    Isolate* isolate = Isolate::GetCurrent();
-    HandleScope scope(isolate);
+void Initialize(const Nan::FunctionCallbackInfo<Value>& args) {
     
     if (args.Length() < 2) {
-        isolate->ThrowException(Exception::TypeError(
-       		String::NewFromUtf8(isolate, "Wrong number of arguments")));
+        Nan::ThrowTypeError("Wrong number of arguments");
     	return;
     }
     
     if (!args[0]->IsNumber() || !args[1]->IsNumber()) {
-        isolate->ThrowException(Exception::TypeError(
-       		String::NewFromUtf8(isolate, "Invalid arguments")));
+        Nan::ThrowTypeError("Invalid arguments");
     	return;
     }
     
     int sensorType = args[0]->Uint32Value();
     if (sensorType != 11 && sensorType != 22) {
-    	isolate->ThrowException(Exception::TypeError(
-       		String::NewFromUtf8(isolate, "Specified sensor type is not supported")));
+    	Nan::ThrowTypeError("Specified sensor type is not supported");
     	return;
     }
     
@@ -294,26 +282,15 @@ void Initialize(const FunctionCallbackInfo<Value>& args) {
     SensorType = sensorType;
     GPIOPort = args[1]->Uint32Value();
     
-    //return scope.Close(v8::Boolean::New(initialize() == 0));
-    args.GetReturnValue().Set(Boolean::New(isolate, initialize() == 0));
+    args.GetReturnValue().Set(Nan::New<Boolean>(initialize() == 0));
 }
-/*
-void RegisterModule(v8::Handle<v8::Object> target) {
-    target->Set(String::NewSymbol("read"),
-                FunctionTemplate::New(Read)->GetFunction());
-    target->Set(String::NewSymbol("readSpec"),
-                FunctionTemplate::New(ReadSpec)->GetFunction());
-    target->Set(String::NewSymbol("initialize"),
-                FunctionTemplate::New(Initialize)->GetFunction());
-}
-
-NODE_MODULE(node_dht_sensor, RegisterModule);
-*/
 
 void Init(Handle<Object> exports) {
-  NODE_SET_METHOD(exports, "read", Read);
-  NODE_SET_METHOD(exports, "readSpec", ReadSpec);
-  NODE_SET_METHOD(exports, "initialize", Initialize);
+	// exports->Set(Nan::New("read").ToLocalChecked(),
+	// 			 Nan::New<FunctionTemplate>(Read)->GetFunction());
+	Nan::SetMethod(exports, "read", Read);
+	Nan::SetMethod(exports, "readSpec", ReadSpec);
+	Nan::SetMethod(exports, "initialize", Initialize);
 }
 
-NODE_MODULE(addon, Init);
+NODE_MODULE(node_dht_sensor, Init);
