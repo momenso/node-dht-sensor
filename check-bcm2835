@@ -10,6 +10,11 @@ if [ $? -eq 0 ] ; then
    echo "----------------------------------------------------------------------------"
    exit 1
 else
-    echo "Library $LIBNAME found."
+	echo "Library $LIBNAME found."
+
+	echo "Installing Native Abstractions for Node.js (NAN)..."
+	npm install nan
+
+    echo "Rebuiling addon..."
     node-gyp rebuild
 fi
