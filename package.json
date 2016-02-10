@@ -13,5 +13,5 @@
   "dependencies": {
     "nan": "^2.2.0"
   },
-  "license": "LGPL"
+  "license": "LGPL-3.0"
 }
