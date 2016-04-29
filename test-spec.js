@@ -1,7 +1,7 @@
 // Module node-dht-sensor demo
 // Reads from two DHT sensors
 
-var sensorLib = require('./build/Release/node-dht-sensor');
+var sensorLib = require('./build/Release/node-dht_sensor');
 
 var sensor = {
   sensors: [ 
