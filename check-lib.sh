@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/sh
 LIBNAME=bcm2835
 
 gcc -l$LIBNAME 2>&1 | grep -q "cannot find -l$LIBNAME"
@@ -11,9 +11,4 @@ if [ $? -eq 0 ] ; then
    exit 0
 else
    echo "Library $LIBNAME found."
-   echo "Installing Native Abstractions for Node.js (NAN)..."
-   npm install nan
-
-   echo "Rebuiling addon..."
-   node-gyp rebuild
 fi
