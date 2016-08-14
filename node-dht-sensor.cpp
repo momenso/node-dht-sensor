@@ -1,32 +1,20 @@
 #include <node.h>
 
-#include <cstdlib>
-#include <ctime>
-
-// Access from ARM running linux
-#define BCM2708_PERI_BASE	0x20000000
-#define GPIO_BASE		(BCM2708_PERI_BASE + 0x200000)
-
 #include <stdio.h>
 #include <string.h>
-#include <stdlib.h>
-#include <dirent.h>
-#include <fcntl.h>
-#include <assert.h>
-#include <unistd.h>
-#include <sys/mman.h>
-#include <sys/types.h>
-#include <sys/stat.h>
 #include <sys/time.h>
 #include <bcm2835.h>
-#include <unistd.h>
 #include <sched.h>
+#include <unistd.h>
 
-#define MAXTIMINGS 100
+#define BCM2708_PERI_BASE   0x20000000
+#define GPIO_BASE           (BCM2708_PERI_BASE + 0x200000)
 
-#define DHT11  11
-#define DHT22  22
-#define AM2302 22
+#define MAXTIMINGS          100
+
+#define DHT11               11
+#define DHT22               22
+#define AM2302              22
 
 #ifdef VERBOSE
 int bits[1000];
@@ -72,9 +60,9 @@ long readDHT(int type, int pin, float &temperature, float &humidity)
     bcm2835_gpio_fsel(pin, BCM2835_GPIO_FSEL_OUTP);
     
     bcm2835_gpio_write(pin, HIGH);
-    bcm2835_delay(500);
+    usleep(500000);
     bcm2835_gpio_write(pin, LOW);
-    bcm2835_delay(20);
+    usleep(20000);
     
     bcm2835_gpio_fsel(pin, BCM2835_GPIO_FSEL_INPT);
 
@@ -89,7 +77,7 @@ long readDHT(int type, int pin, float &temperature, float &humidity)
 #endif
             return -3;
         }
-        bcm2835_delayMicroseconds(1); //usleep(1);
+	usleep(1);
     }
     
     // read data!
