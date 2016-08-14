@@ -2,7 +2,7 @@
   "author": "David Momenso",
   "name": "node-dht-sensor",
   "description": "Reads data from DHT sensors on Raspberry Pi",
-  "version": "0.0.12",
+  "version": "0.0.13",
   "repository": {
     "url": "https://github.com/momenso/node-dht-sensor"
   },
