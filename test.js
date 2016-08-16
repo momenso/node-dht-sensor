@@ -7,7 +7,8 @@ var sensorLib = require('./build/Release/node_dht_sensor');
 var sensor = {
   initialize: function() {
     this.totalReads = 0;
-    return sensorLib.initialize(22, 17);
+	this.totalFailures = 0;
+    return sensorLib.initialize(22, 4);
   },
 
   read: function() {
@@ -19,11 +20,15 @@ var sensor = {
     fs.appendFile('log.csv', 
       new Date().getTime()+','+readout.temperature+','+readout.humidity+',"'+(readout.checksum ? 'Ok' : 'Failed')+'",'+readout.errors+'\n', 
       function (err) { });
-    if (this.totalReads < 300) {
+	this.totalFailures += readout.errors;
+    if (this.totalReads < 10) {
       setTimeout(function() {
         sensor.read();
-      }, 500);
-    }
+      }, 2000);
+    } else {
+		console.log('error rate: '+this.totalFailures+'/'+this.totalReads+': '+
+			((this.totalFailures*100)/(this.totalReads+this.totalFailures)).toFixed(2)+'%');
+	}
   }
 };
 
