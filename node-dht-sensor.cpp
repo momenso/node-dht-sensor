@@ -56,7 +56,7 @@ long readDHT(int type, int pin, float &temperature, float &humidity)
 {
     int laststate = HIGH;
     int j = 0;
-
+	int timeout;
     data[0] = data[1] = data[2] = data[3] = data[4] = 0;
 
 #ifdef VERBOSE
@@ -79,13 +79,23 @@ long readDHT(int type, int pin, float &temperature, float &humidity)
     set_max_priority();
 
     bcm2835_gpio_fsel(pin, BCM2835_GPIO_FSEL_OUTP);
+	bcm2835_gpio_write(pin, HIGH);
+	usleep(10000);
     bcm2835_gpio_write(pin, LOW);
-	usleep(900);
-    bcm2835_gpio_fsel(pin, BCM2835_GPIO_FSEL_INPT);
+	usleep(type == 11 ? 2500 : 1000); // 1000, 900
 	bcm2835_gpio_write(pin, HIGH);
 
-	while (bcm2835_gpio_lev(pin) == 0);
-	while (bcm2835_gpio_lev(pin) == 1);
+	//bcm2835_gpio_write(pin, HIGH);
+
+	//usleep(20);
+    bcm2835_gpio_fsel(pin, BCM2835_GPIO_FSEL_INPT);
+
+	for (timeout = 0; timeout < 100000 && bcm2835_gpio_lev(pin) == 0; timeout++);
+	if (timeout >= 100000) return -3;
+	//while (bcm2835_gpio_lev(pin) == 0);
+	for (timeout = 0; timeout < 100000 && bcm2835_gpio_lev(pin) == 1; timeout++);
+	if (timeout >= 100000) return -3;
+	//while (bcm2835_gpio_lev(pin) == 1);
 
     // read data!
     for (int i = 0; i < MAXTIMINGS; ++i) {
@@ -95,13 +105,13 @@ long readDHT(int type, int pin, float &temperature, float &humidity)
         }
         laststate = bcm2835_gpio_lev(pin);
         if (counter >= 800) break;
-#ifdef VERBOSE
+/*#ifdef VERBOSE
         if (bitidx < 1000) {
             bits[bitidx++] = counter;
         } else {
             printf("WARNING: bits buffer blew up!\n");
         }
-#endif
+#endif*/
         
         if ((i > 3) && (i % 2 == 0)) {
             // shove each bit into the storage bytes
