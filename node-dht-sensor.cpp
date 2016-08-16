@@ -10,14 +10,14 @@
 #define BCM2708_PERI_BASE   0x20000000
 #define GPIO_BASE           (BCM2708_PERI_BASE + 0x200000)
 
-#define MAXTIMINGS          100
+#define MAXTIMINGS          100 // 100
 
 #define DHT11               11
 #define DHT22               22
 #define AM2302              22
 
 #ifdef VERBOSE
-int bits[1000];
+int bits[1000+1];
 int bitidx = 0;
 #endif
 int initialized = 0;
@@ -54,7 +54,6 @@ unsigned long long getTime()
 
 long readDHT(int type, int pin, float &temperature, float &humidity)
 {
-    int counter = 0;
     int laststate = HIGH;
     int j = 0;
 
@@ -79,42 +78,23 @@ long readDHT(int type, int pin, float &temperature, float &humidity)
     // set up real-time scheduling
     set_max_priority();
 
-	usleep(500000);
-
-    // Set GPIO pin to output
     bcm2835_gpio_fsel(pin, BCM2835_GPIO_FSEL_OUTP);
-
-    usleep(100);
-    
-    bcm2835_gpio_write(pin, HIGH);
-    usleep(700000);
     bcm2835_gpio_write(pin, LOW);
-    usleep(15000);
-    
+	usleep(900);
     bcm2835_gpio_fsel(pin, BCM2835_GPIO_FSEL_INPT);
+	bcm2835_gpio_write(pin, HIGH);
 
-    // wait for pin to drop
-    volatile int timeout = 100000;
-    while (bcm2835_gpio_lev(pin) == 1) {
-        if (--timeout < 0) {
-			set_default_priority();
-#ifdef VERBOSE
-            printf("Sensor timeout.\n");
-#endif
-            return -3;
-        }
-    }
+	while (bcm2835_gpio_lev(pin) == 0);
+	while (bcm2835_gpio_lev(pin) == 1);
 
     // read data!
     for (int i = 0; i < MAXTIMINGS; ++i) {
-        counter = 0;
+        int counter = 0;
         while (bcm2835_gpio_lev(pin) == laststate) {
-            ++counter;
-            if (counter == 1000)
-                break;
+            if (++counter >= 800) break;
         }
         laststate = bcm2835_gpio_lev(pin);
-        if (counter == 1000) break;
+        if (counter >= 800) break;
 #ifdef VERBOSE
         if (bitidx < 1000) {
             bits[bitidx++] = counter;
@@ -126,7 +106,7 @@ long readDHT(int type, int pin, float &temperature, float &humidity)
         if ((i > 3) && (i % 2 == 0)) {
             // shove each bit into the storage bytes
             data[j / 8] <<= 1;
-            if (counter > 200) {
+            if (counter >= 230) { // > 200
                 data[j / 8] |= 1;
 			}
             ++j;
@@ -217,7 +197,8 @@ int GPIOPort = 4;
 int SensorType = 11;
 
 void Read(const Nan::FunctionCallbackInfo<Value>& args) {
-    float temperature = 0, humidity = 0;
+    float temperature = last_temperature[GPIOPort], 
+          humidity = last_humidity[GPIOPort];
     int retry = 3;
     int result = 0;
     do {
