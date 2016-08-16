@@ -26,6 +26,23 @@ unsigned long long last_read[32];
 float last_temperature[32] = {};
 float last_humidity[32] = {};
 
+void set_default_priority(void) {
+  struct sched_param sched;
+  memset(&sched, 0, sizeof(sched));
+  // Go back to default scheduler with default 0 priority.
+  sched.sched_priority = 0;
+  sched_setscheduler(0, SCHED_OTHER, &sched);
+}
+
+void set_max_priority(void) {
+	struct sched_param sched;
+	memset(&sched, 0, sizeof(sched));
+	// Use FIFO scheduler with highest priority for the lowest chance 
+	// of the kernel context switching.
+	sched.sched_priority = sched_get_priority_max(SCHED_FIFO);
+	sched_setscheduler(0, SCHED_FIFO, &sched);
+}
+
 unsigned long long getTime()
 {
   struct timeval tv;
@@ -39,7 +56,10 @@ long readDHT(int type, int pin, float &temperature, float &humidity)
 {
     int counter = 0;
     int laststate = HIGH;
-    int j=0;
+    int j = 0;
+
+    data[0] = data[1] = data[2] = data[3] = data[4] = 0;
+
 #ifdef VERBOSE
     bitidx = 0;
 #endif
@@ -56,35 +76,40 @@ long readDHT(int type, int pin, float &temperature, float &humidity)
        last_read[pin] = now + 420;
     }
 
+    // set up real-time scheduling
+    set_max_priority();
+
+	usleep(500000);
+
     // Set GPIO pin to output
     bcm2835_gpio_fsel(pin, BCM2835_GPIO_FSEL_OUTP);
+
+    usleep(100);
     
     bcm2835_gpio_write(pin, HIGH);
-    usleep(500000);
+    usleep(700000);
     bcm2835_gpio_write(pin, LOW);
-    usleep(20000);
+    usleep(15000);
     
     bcm2835_gpio_fsel(pin, BCM2835_GPIO_FSEL_INPT);
 
-    data[0] = data[1] = data[2] = data[3] = data[4] = 0;
-    
-    // wait for pin to drop?
-    int timeout = 100000;
+    // wait for pin to drop
+    volatile int timeout = 100000;
     while (bcm2835_gpio_lev(pin) == 1) {
         if (--timeout < 0) {
+			set_default_priority();
 #ifdef VERBOSE
             printf("Sensor timeout.\n");
 #endif
             return -3;
         }
-	usleep(1);
     }
-    
+
     // read data!
-    for (int i = 0; i < MAXTIMINGS; i++) {
+    for (int i = 0; i < MAXTIMINGS; ++i) {
         counter = 0;
         while (bcm2835_gpio_lev(pin) == laststate) {
-            counter++;
+            ++counter;
             if (counter == 1000)
                 break;
         }
@@ -98,14 +123,17 @@ long readDHT(int type, int pin, float &temperature, float &humidity)
         }
 #endif
         
-        if ((i>3) && (i%2 == 0)) {
+        if ((i > 3) && (i % 2 == 0)) {
             // shove each bit into the storage bytes
-            data[j/8] <<= 1;
-            if (counter > 200)
-                data[j/8] |= 1;
-            j++;
+            data[j / 8] <<= 1;
+            if (counter > 200) {
+                data[j / 8] |= 1;
+			}
+            ++j;
         }
     }
+
+	set_default_priority();
     
     if ((j >= 39) && (data[4] == ((data[0] + data[1] + data[2] + data[3]) & 0xff)))
     {
@@ -143,10 +171,10 @@ long readDHT(int type, int pin, float &temperature, float &humidity)
     }
     else
     {
-#ifdef VERBOSE
+//#ifdef VERBOSE
         printf("Unexpected data: j=%d: %d != %d + %d + %d + %d\n",
                j, data[4], data[0], data[1], data[2], data[3]);
-#endif
+//#endif
         return -1;
     }
     
@@ -157,16 +185,12 @@ long readDHT(int type, int pin, float &temperature, float &humidity)
     // update last readout
     last_temperature[pin] = temperature;
     last_humidity[pin] = humidity;
+
     return 0;
 }
 
 int initialize()
 {
-    // set up real-time scheduling
-    struct sched_param schedp;
-    schedp.sched_priority = 1;
-    sched_setscheduler(0, SCHED_FIFO, &schedp);
-
     if (!bcm2835_init())
     {
 #ifdef VERBOSE
@@ -199,6 +223,8 @@ void Read(const Nan::FunctionCallbackInfo<Value>& args) {
     do {
         result = readDHT(SensorType, GPIOPort, temperature, humidity);
         if (--retry < 0) break;
+		last_read[GPIOPort] = 0;
+		usleep(2000000);
     } while (result != 0);
 
     Local<Object> readout = Nan::New<Object>();
@@ -249,7 +275,6 @@ void ReadSpec(const Nan::FunctionCallbackInfo<Value>& args) {
 }
 
 void Initialize(const Nan::FunctionCallbackInfo<Value>& args) {
-    
     if (args.Length() < 2) {
         Nan::ThrowTypeError("Wrong number of arguments");
     	return;
@@ -274,8 +299,6 @@ void Initialize(const Nan::FunctionCallbackInfo<Value>& args) {
 }
 
 void Init(Handle<Object> exports) {
-	// exports->Set(Nan::New("read").ToLocalChecked(),
-	// 			 Nan::New<FunctionTemplate>(Read)->GetFunction());
 	Nan::SetMethod(exports, "read", Read);
 	Nan::SetMethod(exports, "readSpec", ReadSpec);
 	Nan::SetMethod(exports, "initialize", Initialize);
