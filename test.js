@@ -8,7 +8,7 @@ var sensor = {
   initialize: function() {
     this.totalReads = 0;
 	this.totalFailures = 0;
-    return sensorLib.initialize(22, 4);
+    return sensorLib.initialize(11, 4);
   },
 
   read: function() {
@@ -18,16 +18,17 @@ var sensor = {
                 ', valid: '+readout.isValid+
                 ', errors: '+readout.errors);
     fs.appendFile('log.csv', 
-      new Date().getTime()+','+readout.temperature+','+readout.humidity+',"'+(readout.checksum ? 'Ok' : 'Failed')+'",'+readout.errors+'\n', 
+      new Date().getTime()+','+readout.temperature+','+readout.humidity+',"'+(readout.isValid ? 'Ok' : 'Failed')+'",'+readout.errors+'\n', 
       function (err) { });
 	this.totalFailures += readout.errors;
-    if (this.totalReads < 10) {
+	this.totalReads += readout.errors;
+    if (this.totalReads <= 1000) {
       setTimeout(function() {
         sensor.read();
-      }, 2000);
+      }, 2500);
     } else {
 		console.log('error rate: '+this.totalFailures+'/'+this.totalReads+': '+
-			((this.totalFailures*100)/(this.totalReads+this.totalFailures)).toFixed(2)+'%');
+			((this.totalFailures*100)/this.totalReads).toFixed(2)+'%');
 	}
   }
 };
