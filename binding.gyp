@@ -10,7 +10,7 @@
       "conditions": [
         ["OS=='linux'", {
           "include_dirs+": "/usr/local/lib/libbcm2835.a",
-          "sources": ["node-dht-sensor.cpp"]
+          "sources": ["node-dht-sensor.cpp", "dht-sensor.cpp" ]
         }]
       ]
     }
