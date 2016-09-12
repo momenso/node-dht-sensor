@@ -8,6 +8,7 @@ extern int initialized;
 extern unsigned long long last_read[32];
 extern float last_temperature[32];
 extern float last_humidity[32];
+extern int data[100];
 
 int GPIOPort = 4;
 int SensorType = 11;
@@ -29,6 +30,13 @@ void Read(const Nan::FunctionCallbackInfo<Value>& args) {
     readout->Set(Nan::New("temperature").ToLocalChecked(), Nan::New<Number>(temperature));
     readout->Set(Nan::New("isValid").ToLocalChecked(), Nan::New<Boolean>(result == 0));
     readout->Set(Nan::New("errors").ToLocalChecked(), Nan::New<Number>(retry));
+    readout->Set(Nan::New("raw").ToLocalChecked(), Nan::New<Number>(
+      ((long long)data[0] << 32) |
+      ((long long)data[1] << 24) |
+      ((long long)data[2] << 16) |
+      ((long long)data[3] << 8) |
+      ((long long)data[4])
+    ));
 
     args.GetReturnValue().Set(readout);
 }
