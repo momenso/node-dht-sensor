@@ -1,9 +1,7 @@
 #include <stdio.h>
 #include <string.h>
-#include <sys/mman.h>
 #include <sys/time.h>
 #include <bcm2835.h>
-#include <sched.h>
 #include <unistd.h>
 
 #define BCM2708_PERI_BASE   0x20000000
@@ -17,33 +15,13 @@ int initialized = 0;
 unsigned long long last_read[32] = {};
 float last_temperature[32] = {};
 float last_humidity[32] = {};
-int data[MAXTIMINGS];
-
-void set_default_priority(void) {
-	struct sched_param sched;
-	memset(&sched, 0, sizeof(sched));
-	// Go back to default scheduler with default 0 priority.
-	sched.sched_priority = 0;
-	sched_setscheduler(0, SCHED_OTHER, &sched);
-	munlockall();
-}
-
-inline void set_max_priority(void) {
-	struct sched_param sched;
-	memset(&sched, 0, sizeof(sched));
-	// Use FIFO scheduler with highest priority for the lowest chance
-	// of the kernel context switching.
-	sched.sched_priority = sched_get_priority_max(SCHED_FIFO);
-	sched_setscheduler(0, SCHED_FIFO, &sched);
-	mlockall(MCL_CURRENT | MCL_FUTURE);
-}
 
 unsigned long long getTime()
 {
   struct timeval tv;
   gettimeofday(&tv, NULL);
-  unsigned long long time = (unsigned long long)(tv.tv_sec)*1000 +
-                            (unsigned long long)(tv.tv_usec)/1000;
+  unsigned long long time = (unsigned long long)(tv.tv_sec) * 1000 +
+                            (unsigned long long)(tv.tv_usec) / 1000;
   return time;
 }
 
@@ -52,7 +30,7 @@ long readDHT(int type, int pin, float &temperature, float &humidity)
 	int j = 0;
 	int timeout;
 	int bits[MAXTIMINGS];
-  data[0] = data[1] = data[2] = data[3] = data[4] = 0;
+	int data[MAXTIMINGS / 8] = {};
 
 	#ifdef VERBOSE
 	FILE *pTrace = fopen("dht-sensor.log", "a");
@@ -61,6 +39,7 @@ long readDHT(int type, int pin, float &temperature, float &humidity)
 	}
 	#endif
 
+	// throttle sensor reading
   unsigned long long now = getTime();
   if (now - last_read[pin] < 2000) {
 		#ifdef VERBOSE
@@ -73,25 +52,22 @@ long readDHT(int type, int pin, float &temperature, float &humidity)
      last_read[pin] = now + 420;
   }
 
-	// set up as real-time scheduling as possible
-	set_max_priority();
-	usleep(1000);
-
+	// request sensor data
 	bcm2835_gpio_fsel(pin, BCM2835_GPIO_FSEL_OUTP);
 	bcm2835_gpio_write(pin, HIGH);
 	usleep(10000);
 	bcm2835_gpio_write(pin, LOW);
-	usleep(type == 11 ? 2500 : 600);
+	usleep(type == 11 ? 2500 : 800);
 	bcm2835_gpio_write(pin, HIGH);
-
   bcm2835_gpio_fsel(pin, BCM2835_GPIO_FSEL_INPT);
 
+	// wait for sensor response
 	for (timeout = 0; timeout < 1000000 && bcm2835_gpio_lev(pin) == LOW; ++timeout);
-	if (timeout >= 100000) { set_default_priority(); return -3; }
+	if (timeout >= 100000) return -3;
 	for (timeout = 0; timeout < 1000000 && bcm2835_gpio_lev(pin) == HIGH; ++timeout);
-	if (timeout >= 100000) { set_default_priority(); return -3; }
+	if (timeout >= 100000) return -3;
 
-	// read data!
+	// read data
 	for (j = 0; j < MAXTIMINGS; ++j) {
 		for (timeout = 0; bcm2835_gpio_lev(pin) == LOW && timeout < 50000; ++timeout);
 		for (timeout = 0; bcm2835_gpio_lev(pin) == HIGH && timeout < 50000; ++timeout);
@@ -99,8 +75,7 @@ long readDHT(int type, int pin, float &temperature, float &humidity)
 		if (timeout >= 50000) break;
 	}
 
-	set_default_priority();
-
+	// data decoding, get widest pulse
 	int peak = bits[1];
 	#ifdef VERBOSE
 	fprintf(pTrace, "init peak: %d\n", bits[1]);
@@ -114,13 +89,14 @@ long readDHT(int type, int pin, float &temperature, float &humidity)
 		}
 	}
 
+	// convert pulses to bits
 	#ifdef VERBOSE
 	fprintf(pTrace, "j=%d, peak=%d:\n", j, peak);
 	#endif
 	int k = 0;
 	for (int i = 1; i < j; ++i) {
 		data[k] <<= 1;
-		if ((2*bits[i] - peak) > 0) {
+		if ((2 * bits[i] - peak) > 0) {
 			data[k] |= 1;
 			#ifdef VERBOSE
 			fprintf(pTrace, "1 (%03d) ", bits[i]);
@@ -136,6 +112,7 @@ long readDHT(int type, int pin, float &temperature, float &humidity)
 		}
 	}
 
+	// crc checking
 	#ifdef VERBOSE
 	int crc = ((data[0] + data[1] + data[2] + data[3]) & 0xff);
 	fprintf(pTrace, "\n=> %x %x %x %x (%x/%x) : %s\n",
@@ -143,7 +120,7 @@ long readDHT(int type, int pin, float &temperature, float &humidity)
 		crc, (data[4] == crc) ? "OK" : "ERR");
 	#endif
 
-  if ((j == 41) && (data[4] == ((data[0] + data[1] + data[2] + data[3]) & 0xff)))
+  if ((j >= 41) && (data[4] == ((data[0] + data[1] + data[2] + data[3]) & 0xff)))
   {
 		#ifdef VERBOSE
     fprintf(pTrace, "[Sensor type = %d] ", type);
@@ -160,7 +137,7 @@ long readDHT(int type, int pin, float &temperature, float &humidity)
     {
       float f, h;
       h = data[0] * 256 + data[1];
-      h /= 10;
+      h /= 10.0;
 
       f = (data[2] & 0x7F) * 256 + data[3];
       f /= 10.0;
