@@ -31,7 +31,7 @@ var sensor = {
         var readout = sensorLib.read();
         this.totalReads++;
 
-        console.log('Temperature: ' + readout.temperature.toFixed(1) + 'C, ' +
+        console.log('Temperature: ' + readout.temperature.toFixed(1) + '°C, ' +
             'humidity: ' + readout.humidity.toFixed(1) + '%, ' +
             'valid: ' + readout.isValid + ', ' +
             'errors: ' + readout.errors);
