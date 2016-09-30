@@ -49,7 +49,7 @@ long readDHT(int type, int pin, float &temperature, float &humidity)
 		humidity = last_humidity[pin];
 		return 0;
   } else {
-     last_read[pin] = now + 420;
+     last_read[pin] = now; // 420
   }
 
 	// request sensor data
