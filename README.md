@@ -9,9 +9,18 @@ $ npm install node-dht-sensor
 
 ## Usage
 
-This module uses the [BCM2835](http://www.airspayce.com/mikem/bcm2835/) library that requires access to /open/mem. Because of this, you will typically run node with admin privileges.
+This module depends on the [BCM2835](http://www.airspayce.com/mikem/bcm2835/) library that must be installed on your board before you can actually use this module.
 
-The first step is initializing the sensor by specifying the sensor type and which GPIO pin the sensor is connected. It should work for DHT11, DHT22 and AM2302 sensors. If the initialization succeeds when you can call the read function to obtain the latest readout from the sensor. Readout values contains a temperature and a humidity property.
+To initialize the sensor, you have to specify the sensor type and the [GPIO pin](https://www.raspberrypi.org/documentation/usage/gpio/) where the sensor is connected to. It should work for DHT11, DHT22 and AM2302 sensors.
+
+You should use sensorType value to match the sensor as follows:
+
+| Sensor          | sensorType value |
+|-----------------|:----------------:|
+| DHT11           | 11               |
+| DHT22 or AM2302 | 22               |
+
+If the initialization succeeds when you can call the read function to obtain the latest readout from the sensor. Readout values contains a temperature and a humidity property.
 
 ### First Example
 
@@ -81,7 +90,7 @@ sensor.read();
 
 Standard node-gyp commands are used to build the module. So, just make sure you have node and node-gyp as well as the Broadcom library to build the project.
 
-1. Download BCM2835 library and follow installation instructions from the [website](http://www.airspayce.com/mikem/bcm2835/).
+1. Download BCM2835 library and follow installation  [instructions](http://www.airspayce.com/mikem/bcm2835/).
 
 2. In case, you don't have node-gyp, install it first:
    ``` bash
@@ -130,3 +139,5 @@ $ sudo dpkg -i node_latest_armhf.deb
 [2]: BCM2835 - http://www.airspayce.com/mikem/bcm2835/
 
 [3]: Node.js native addon build tool - https://github.com/TooTallNate/node-gyp
+
+[4]: GPIO: Raspbery Pi Models A and B - https://www.raspberrypi.org/documentation/usage/gpio/
