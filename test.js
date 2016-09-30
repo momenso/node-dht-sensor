@@ -47,7 +47,7 @@ var sensor = {
         this.totalFailures += readout.errors;
         this.totalReads += readout.errors;
 
-        if (this.totalReads <= this.repeats) {
+        if (this.totalReads < this.repeats) {
             setTimeout(function() {
                 sensor.read();
             }, 2500);
