@@ -78,72 +78,82 @@ class ReadWorker : public Nan::AsyncWorker {
     }
 };
 
-void Read(const Nan::FunctionCallbackInfo<Value>& args) {
-  int params = args.Length();
-  if (params == 3) {
-    int sensor_type = Nan::To<int>(args[0]).FromJust();
-    int gpio_pin = Nan::To<int>(args[1]).FromJust();
-    Nan::Callback *callback = new Nan::Callback(args[2].As<Function>());
+void ReadAsync(const Nan::FunctionCallbackInfo<Value>& args) {
+  int sensor_type = Nan::To<int>(args[0]).FromJust();
+  int gpio_pin = Nan::To<int>(args[1]).FromJust();
+  Nan::Callback *callback = new Nan::Callback(args[2].As<Function>());
 
-    Nan::AsyncQueueWorker(new ReadWorker(callback, sensor_type, gpio_pin));
+  Nan::AsyncQueueWorker(new ReadWorker(callback, sensor_type, gpio_pin));
+}
+
+void ReadSpec(const Nan::FunctionCallbackInfo<Value>& args) {
+  int sensorType = args[0]->Uint32Value();
+  if (sensorType != 11 && sensorType != 22) {
+    Nan::ThrowTypeError("specified sensor type is invalid");
+    return;
   }
-  else if (params == 2)
-  {
-    int sensorType = args[0]->Uint32Value();
-    if (sensorType != 11 && sensorType != 22) {
-      Nan::ThrowTypeError("specified sensor type is invalid");
+
+  if (!initialized) {
+    initialized = initialize() == 0;
+    if (!initialized) {
+      Nan::ThrowTypeError("failed to initialize");
       return;
     }
-
-    if (!initialized) {
-      initialized = initialize() == 0;
-      if (!initialized) {
-        Nan::ThrowTypeError("failed to initialize");
-        return;
-      }
-    }
-
-    int gpio = args[1]->Uint32Value();
-    float temperature = 0, humidity = 0;
-    int retry = 3;
-    int result = 0;
-    do {
-      result = readDHT(sensorType, gpio, temperature, humidity);
-      if (--retry < 0) break;
-    } while (result != 0);
-
-    Local<Object> readout = Nan::New<Object>();
-    readout->Set(Nan::New("humidity").ToLocalChecked(), Nan::New<Number>(humidity));
-    readout->Set(Nan::New("temperature").ToLocalChecked(), Nan::New<Number>(temperature));
-    readout->Set(Nan::New("isValid").ToLocalChecked(), Nan::New<Boolean>(result == 0));
-    readout->Set(Nan::New("errors").ToLocalChecked(), Nan::New<Number>(2 - retry));
-
-    args.GetReturnValue().Set(readout);
   }
-  else if (params == 0)
-  {
-    float temperature = last_temperature[GPIOPort],
-          humidity = last_humidity[GPIOPort];
-    int retry = 0;
-    int result = 0;
-    while (true) {
-      result = readDHT(SensorType, GPIOPort, temperature, humidity);
-			if (result == 0 || ++retry > 3) break;
-			last_read[GPIOPort] = 0;
-			sleep(1);
-    }
 
-    Local<Object> readout = Nan::New<Object>();
-    readout->Set(Nan::New("humidity").ToLocalChecked(), Nan::New<Number>(humidity));
-    readout->Set(Nan::New("temperature").ToLocalChecked(), Nan::New<Number>(temperature));
-    readout->Set(Nan::New("isValid").ToLocalChecked(), Nan::New<Boolean>(result == 0));
-    readout->Set(Nan::New("errors").ToLocalChecked(), Nan::New<Number>(retry));
+  int gpio = args[1]->Uint32Value();
+  float temperature = 0, humidity = 0;
+  int retry = 3;
+  int result = 0;
+  do {
+    result = readDHT(sensorType, gpio, temperature, humidity);
+    if (--retry < 0) break;
+  } while (result != 0);
 
-    args.GetReturnValue().Set(readout);
+  Local<Object> readout = Nan::New<Object>();
+  readout->Set(Nan::New("humidity").ToLocalChecked(), Nan::New<Number>(humidity));
+  readout->Set(Nan::New("temperature").ToLocalChecked(), Nan::New<Number>(temperature));
+  readout->Set(Nan::New("isValid").ToLocalChecked(), Nan::New<Boolean>(result == 0));
+  readout->Set(Nan::New("errors").ToLocalChecked(), Nan::New<Number>(2 - retry));
+
+  args.GetReturnValue().Set(readout);
+}
+
+void ReadPreset(const Nan::FunctionCallbackInfo<Value>& args) {
+  float temperature = last_temperature[GPIOPort],
+        humidity = last_humidity[GPIOPort];
+  int retry = 0;
+  int result = 0;
+  while (true) {
+    result = readDHT(SensorType, GPIOPort, temperature, humidity);
+    if (result == 0 || ++retry > 3) break;
+    last_read[GPIOPort] = 0;
+    sleep(1);
   }
-  else
-  {
-    Nan::ThrowTypeError("invalid number of arguments");
+
+  Local<Object> readout = Nan::New<Object>();
+  readout->Set(Nan::New("humidity").ToLocalChecked(), Nan::New<Number>(humidity));
+  readout->Set(Nan::New("temperature").ToLocalChecked(), Nan::New<Number>(temperature));
+  readout->Set(Nan::New("isValid").ToLocalChecked(), Nan::New<Boolean>(result == 0));
+  readout->Set(Nan::New("errors").ToLocalChecked(), Nan::New<Number>(retry));
+
+  args.GetReturnValue().Set(readout);
+}
+
+void Read(const Nan::FunctionCallbackInfo<Value>& args) {
+  int params = args.Length();
+  switch(params) {
+    case 0:
+      ReadPreset(args);
+      break;
+    case 2:
+      ReadSpec(args);
+      break;
+    case 3:
+      ReadAsync(args);
+      break;
+    default:
+      Nan::ThrowTypeError("invalid number of arguments");
   }
 }
 
