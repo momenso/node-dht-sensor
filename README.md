@@ -72,7 +72,7 @@ var sensor = {
     } ],
     read: function() {
         for (var a in this.sensors) {
-            var b = sensorLib.readSpec(this.sensors[a].type, this.sensors[a].pin);
+            var b = sensorLib.read(this.sensors[a].type, this.sensors[a].pin);
             console.log(this.sensors[a].name + ": " +
               b.temperature.toFixed(1) + "C, " +
               b.humidity.toFixed(1) + "%");
