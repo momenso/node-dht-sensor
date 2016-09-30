@@ -126,10 +126,13 @@ Verbose output from the module can be enabled by defining ```VERBOSE``` during t
 
 ### Appendix A: Quick Node.js installation guide
 
-There are many ways you can get Node.js installed on your Raspberry Pi but the following method is very convenient for getting started on the latest version, very quickly.
-``` shell
-$ wget http://node-arm.herokuapp.com/node_latest_armhf.deb
-$ sudo dpkg -i node_latest_armhf.deb
+There are many ways you can get Node.js installed on your Raspberry Pi. Here is just one of way you can do it.
+``` bash
+$ wget http://nodejs.org/dist/latest/node-v6.7.0-linux-armv7l.tar.xz
+$ tar xvfJ node-v6.7.0-linux-armv7l.tar.xz
+$ sudo mv node-v6.7.0-linux-armv7l /opt
+$ sudo update-alternatives --install "/usr/bin/node" "node" "/opt/node-v6.7.0-linux-armv7l/bin/node" 1
+$ sudo update-alternatives --set node /opt/node-v6.7.0-linux-armv7l/bin/node
 ```
 
 ### References
