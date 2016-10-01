@@ -4,7 +4,7 @@ var fs = require('fs');
 var sensorLib = require('../build/Release/node_dht_sensor');
 var Process = require('process');
 
-var usage = 'USAGE: node test.js [sensorType] [gpioPin] <repeats>\n' +
+var usage = 'USAGE: node sync-implicit.js [sensorType] [gpioPin] <repeats>\n' +
     '    sensorType:\n' +
     '         11: For DHT11 sensor.\n' +
     '         22: For DHT22 or AM2302 sensors.\n\n' +
