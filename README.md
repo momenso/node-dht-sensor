@@ -24,30 +24,18 @@ If the initialization succeeds when you can call the read function to obtain the
 
 ### First Example
 
-This sample queries the AM2302 sensor connected to the GPIO 4 every 2 seconds and displays the result on the console.
+This sample queries a DHT22 sensor connected to the GPIO 4 and prints out the result on the console.
 
 ``` javascript
-var sensorLib = require('node-dht-sensor');
+var sensor = require('node-dht-sensor');
 
-var sensor = {
-    initialize: function () {
-        return sensorLib.initialize(22, 4);
-    },
-    read: function () {
-        var readout = sensorLib.read();
-        console.log('Temperature: ' + readout.temperature.toFixed(2) + 'C, ' +
-            'humidity: ' + readout.humidity.toFixed(2) + '%');
-        setTimeout(function () {
-            sensor.read();
-        }, 2000);
+sensor.read(22, 4, function(err, temperature, humidity) {
+    if (!err) {
+        console.log('temp: ' + temperature.toFixed(1) + '°C, ' +
+            'humidity: ' + humidity.toFixed(1) + '%'
+        );
     }
-};
-
-if (sensor.initialize()) {
-    sensor.read();
-} else {
-    console.warn('Failed to initialize sensor');
-}
+});
 ```
 
 ### Multiple Sensors Example
