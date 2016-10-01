@@ -1,7 +1,7 @@
 // Module node-dht-sensor demo
 // Read asynchronously from the sensor
 
-var sensor = require('./build/Release/node_dht_sensor');
+var sensor = require('../build/Release/node_dht_sensor');
 var count = 0;
 var iid = setInterval(function() {
   if (++count > 10) {

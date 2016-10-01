@@ -1,7 +1,7 @@
 // Module node-dht-sensor demo
 // Reads relative air humidity from DHT sensor
 var fs = require('fs');
-var sensorLib = require('./build/Release/node_dht_sensor');
+var sensorLib = require('../build/Release/node_dht_sensor');
 var Process = require('process');
 
 var usage = 'USAGE: node test.js [sensorType] [gpioPin] <repeats>\n' +
