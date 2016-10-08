@@ -9,6 +9,7 @@
       "libraries": [ "-lbcm2835" ],
       "conditions": [
         ["OS=='linux'", {
+          "cflags": [ "-std=c++11" ],
           "include_dirs+": "/usr/local/lib/libbcm2835.a",
           "sources": ["node-dht-sensor.cpp", "dht-sensor.cpp" ]
         }]
