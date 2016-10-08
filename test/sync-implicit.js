@@ -2,7 +2,6 @@
 // Reads relative air humidity from DHT sensor
 var fs = require('fs');
 var sensorLib = require('../build/Release/node_dht_sensor');
-var Process = require('process');
 
 var usage = 'USAGE: node sync-implicit.js [sensorType] [gpioPin] <repeats>\n' +
     '    sensorType:\n' +
@@ -13,18 +12,18 @@ var usage = 'USAGE: node sync-implicit.js [sensorType] [gpioPin] <repeats>\n' +
     '    repeats:\n' +
     '         How many times the read operation will be performed, default: 10\n';
 
-if (Process.argv.length < 4) {
+if (process.argv.length < 4) {
     console.warn(usage);
-    Process.exit(1);
+    process.exit(1);
 }
 
 var sensor = {
     initialize: function() {
         this.totalReads = 0;
         this.totalFailures = 0;
-        this.repeats = parseInt(Process.argv[4] || '10', 10);
-        return sensorLib.initialize(parseInt(Process.argv[2], 10),
-            parseInt(Process.argv[3], 10));
+        this.repeats = parseInt(process.argv[4] || '10', 10);
+        return sensorLib.initialize(parseInt(process.argv[2], 10),
+            parseInt(process.argv[3], 10));
     },
 
     read: function() {
