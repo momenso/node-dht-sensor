@@ -33,24 +33,31 @@ long readDHT(int type, int pin, float &temperature, float &humidity)
 	int data[MAXTIMINGS / 8] = {};
 
 	#ifdef VERBOSE
+  #ifdef DBG_CONSOLE
+  FILE *pTrace = stdout;
+  #else
 	FILE *pTrace = fopen("dht-sensor.log", "a");
 	if (pTrace == NULL) {
-		puts("WARNING: unable to initialize trace file.");
+		puts("WARNING: unable to initialize trace file, it will be redirected to stdout.");
+    pTrace = stdout;
 	}
+  #endif
+  fprintf(pTrace, "start sensor read (type=%d, pin=%d).\n", type, pin);
 	#endif
 
-	// throttle sensor reading
+	// throttle sensor reading - if last read was less than 2s then return same
   unsigned long long now = getTime();
-  if (now - last_read[pin] < 2000) {
+  if ((last_read[pin] > 0) && (now - last_read[pin] < 2000)) {
 		#ifdef VERBOSE
-		fprintf(pTrace, "too early to read again pin %d: %llu\n", pin, now - last_read[pin]);
+		fprintf(pTrace, "*** too early to read again pin %d: %llu\n", pin, now - last_read[pin]);
 		#endif
 		temperature = last_temperature[pin];
 		humidity = last_humidity[pin];
 		return 0;
-  } else {
-     last_read[pin] = now; // 420
   }
+  // else {
+  //    last_read[pin] = now;
+  // }
 
 	// request sensor data
 	bcm2835_gpio_fsel(pin, BCM2835_GPIO_FSEL_OUTP);
@@ -63,9 +70,29 @@ long readDHT(int type, int pin, float &temperature, float &humidity)
 
 	// wait for sensor response
 	for (timeout = 0; timeout < 1000000 && bcm2835_gpio_lev(pin) == LOW; ++timeout);
-	if (timeout >= 100000) return -3;
+	if (timeout >= 100000) {
+    #ifdef VERBOSE
+    fprintf(pTrace, "*** timeout #1\n");
+    #ifdef DBG_CONSOLE
+    fflush(pTrace);
+    #else
+    fclose(pTrace);
+    #endif
+    #endif
+    return -3;
+  }
 	for (timeout = 0; timeout < 1000000 && bcm2835_gpio_lev(pin) == HIGH; ++timeout);
-	if (timeout >= 100000) return -3;
+	if (timeout >= 100000) {
+    #ifdef VERBOSE
+    fprintf(pTrace, "*** timeout #2\n");
+    #ifdef DBG_CONSOLE
+    fflush(pTrace);
+    #else
+    fclose(pTrace);
+    #endif
+    #endif
+    return -3;
+  }
 
 	// read data
 	for (j = 0; j < MAXTIMINGS; ++j) {
@@ -123,12 +150,12 @@ long readDHT(int type, int pin, float &temperature, float &humidity)
   if ((j >= 41) && (data[4] == ((data[0] + data[1] + data[2] + data[3]) & 0xff)))
   {
 		#ifdef VERBOSE
-    fprintf(pTrace, "[Sensor type = %d] ", type);
+    fprintf(pTrace, "sensor type = %d, ", type);
 		#endif
 
     if (type == DHT11) {
 			#ifdef VERBOSE
-      printf("Temp = %d C, Hum = %d %%\n", data[2], data[0]);
+      printf("temperature = %d, humidity = %d\n", data[2], data[0]);
 			#endif
       temperature = data[2];
       humidity = data[0];
@@ -144,7 +171,7 @@ long readDHT(int type, int pin, float &temperature, float &humidity)
       if (data[2] & 0x80) f *= -1;
 
 			#ifdef VERBOSE
-      fprintf(pTrace, "Temp = %.1f C, Hum = %.1f %%\n", f, h);
+      fprintf(pTrace, "temperature = %.1f, humidity = %.1f\n", f, h);
 			#endif
 	    temperature = f;
 	    humidity = h;
@@ -152,27 +179,41 @@ long readDHT(int type, int pin, float &temperature, float &humidity)
 		else
 		{
 			#ifdef VERBOSE
+      fprintf(pTrace, "*** unknown sensor data type\n");
+      #ifdef DBG_CONSOLE
+      fflush(pTrace);
+      #else
 			fclose(pTrace);
 			#endif
+      #endif
 	  	return -2;
 	  }
 	}
 	else
 	{
 		#ifdef VERBOSE
-    fprintf(pTrace, "Unexpected data: bits=%d: %d != %d + %d + %d + %d\n",
+    fprintf(pTrace, "*** unexpected data: bits=%d: %d != %d + %d + %d + %d\n",
      j, data[4], data[0], data[1], data[2], data[3]);
+    #ifdef DBG_CONSOLE
+    fflush(pTrace);
+    #else
 		fclose(pTrace);
 		#endif
+    #endif
     return -1;
   }
 
 	#ifdef VERBOSE
-  fprintf(pTrace, "Obtained readout successfully.\n");
+  fprintf(pTrace, "*** obtained readout successfully.\n");
+  #ifdef DBG_CONSOLE
+  fflush(pTrace);
+  #else
 	fclose(pTrace);
+  #endif
 	#endif
 
 	// update last readout
+  last_read[pin] = now;
 	last_temperature[pin] = temperature;
 	last_humidity[pin] = humidity;
 
