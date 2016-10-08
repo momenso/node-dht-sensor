@@ -1,26 +1,34 @@
 // Module node-dht-sensor demo
 // Reads from two DHT sensors
+var sensor = require('../build/Release/node_dht_sensor');
+var usage = 'USAGE: node sync-explicit.js [sensorType] [gpioPin] <repeats>\n' +
+    '    sensorType:\n' +
+    '         11: For DHT11 sensor.\n' +
+    '         22: For DHT22 or AM2302 sensors.\n\n' +
+    '    gpipPin:\n' +
+    '         Pin number where the sensor is physically connected to.\n\n' +
+    '    repeats:\n' +
+    '         How many times the read operation will be performed, default: 10\n';
 
-var sensorLib = require('../build/Release/node_dht_sensor');
+if (process.argv.length < 4) {
+    console.warn(usage);
+    process.exit(1);
+}
 
-var sensor = {
-  sensors: [
-    { name: 'Indoor', type: 11, pin: 27 },
-    { name: 'Outdoor', type: 22, pin: 4 }
-  ],
+var sensorType = parseInt(process.argv[2], 10);
+var gpioPin = parseInt(process.argv[3], 10);
+var repeats = parseInt(process.argv[4] || '10', 10);
+var count = 0;
 
-  read: function() {
-    for (var i in this.sensors) {
-      var readout = sensorLib.read(this.sensors[i].type,
-          this.sensors[i].pin);
-      console.log(this.sensors[i].name+': '+
-                  readout.temperature.toFixed(1)+'C, '+
-                  readout.humidity.toFixed(1)+'%');
-    }
-    setTimeout(function() {
-      sensor.read();
-    }, 2000);
+var iid = setInterval(function() {
+  if (++count >= repeats) {
+    clearInterval(iid);
   }
-};
-
-sensor.read();
+  var start = new Date().getTime();
+  var readout = sensor.read(sensorType, gpioPin);
+  var end = new Date().getTime();
+  console.log('temperature: ' + readout.temperature.toFixed(1) + '°C, ' +
+    'humidity: ' + readout.humidity.toFixed(1) + '%, ' +
+    'valid: ' + readout.isValid + ', errors: ' + readout.errors + ', ' +
+    'time: ' + (end - start) + "ms");
+}, 2500);

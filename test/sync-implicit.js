@@ -1,7 +1,7 @@
 // Module node-dht-sensor demo
 // Reads relative air humidity from DHT sensor
 var fs = require('fs');
-var sensorLib = require('../build/Release/node_dht_sensor');
+var sensor = require('../build/Release/node_dht_sensor');
 
 var usage = 'USAGE: node sync-implicit.js [sensorType] [gpioPin] <repeats>\n' +
     '    sensorType:\n' +
@@ -17,48 +17,26 @@ if (process.argv.length < 4) {
     process.exit(1);
 }
 
-var sensor = {
-    initialize: function() {
-        this.totalReads = 0;
-        this.totalFailures = 0;
-        this.repeats = parseInt(process.argv[4] || '10', 10);
-        return sensorLib.initialize(parseInt(process.argv[2], 10),
-            parseInt(process.argv[3], 10));
-    },
+var sensorType = parseInt(process.argv[2], 10);
+var gpioPin = parseInt(process.argv[3], 10);
+var repeats = parseInt(process.argv[4] || '10', 10);
+var count = 0;
 
-    read: function() {
-        var readout = sensorLib.read();
-        this.totalReads++;
-
-        console.log('Temperature: ' + readout.temperature.toFixed(1) + '°C, ' +
-            'humidity: ' + readout.humidity.toFixed(1) + '%, ' +
-            'valid: ' + readout.isValid + ', ' +
-            'errors: ' + readout.errors);
-
-        fs.appendFile('log.csv',
-            new Date().getTime() + ',' +
-            readout.temperature + ',' +
-            readout.humidity + ',"' +
-            (readout.isValid ? 'Ok' : 'Failed') + '",' +
-            readout.errors + '\n',
-            function(err) {});
-
-        this.totalFailures += readout.errors;
-        this.totalReads += readout.errors;
-
-        if (this.totalReads < this.repeats) {
-            setTimeout(function() {
-                sensor.read();
-            }, 2500);
-        } else {
-            console.log('error rate: ' + this.totalFailures + '/' + this.totalReads +
-                ': ' + ((this.totalFailures * 100) / this.totalReads).toFixed(2) + '%');
-        }
-    }
-};
-
-if (sensor.initialize()) {
-    sensor.read();
-} else {
-    console.warn('Failed to initialize sensor');
+// initialize sensor
+if (!sensor.initialize(sensorType, gpioPin)) {
+  console.warn('Failed to initialize sensor');
+  return;
 }
+
+var iid = setInterval(function() {
+  if (++count >= repeats) {
+    clearInterval(iid);
+  }
+  var start = new Date().getTime();
+  var readout = sensor.read();
+  var end = new Date().getTime();
+  console.log('temperature: ' + readout.temperature.toFixed(1) + '°C, ' +
+    'humidity: ' + readout.humidity.toFixed(1) + '%, ' +
+    'valid: ' + readout.isValid + ', errors: ' + readout.errors + ', ' +
+    'time: ' + (end - start) + "ms");
+}, 2500);

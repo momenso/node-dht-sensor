@@ -21,18 +21,23 @@ var sensorType = parseInt(process.argv[2], 10);
 var gpioPin = parseInt(process.argv[3], 10);
 var repeats = parseInt(process.argv[4] || '10', 10);
 var count = 0;
+var start = 0;
+var end = 0;
 
 var iid = setInterval(function() {
   if (++count >= repeats) {
     clearInterval(iid);
   }
 
+  start = new Date().getTime();
+
   sensor.read(sensorType, gpioPin, function(err, temperature, humidity) {
+    end = new Date().getTime();
     if (err) {
       console.warn('' + err);
     } else {
-      console.log('temp: ' + temperature.toFixed(1) + '°C, ' +
-        'humidity: ' + humidity.toFixed(1) + '%'
+      console.log('temperature: ' + temperature.toFixed(1) + '°C, ' +
+        'humidity: ' + humidity.toFixed(1) + '%, time: ' + (end - start) + 'ms'
       );
     }
   });
