@@ -27,10 +27,10 @@ unsigned long long getTime()
 
 long readDHT(int type, int pin, float &temperature, float &humidity)
 {
-	int j = 0;
-	int timeout;
-	int bits[MAXTIMINGS];
-	int data[MAXTIMINGS / 8] = {};
+    int j = 0;
+    int timeout;
+    int bits[MAXTIMINGS];
+    int data[MAXTIMINGS / 8] = {};
 
     #ifdef VERBOSE
     #ifdef DBG_CONSOLE
@@ -46,7 +46,7 @@ long readDHT(int type, int pin, float &temperature, float &humidity)
     fprintf(pTrace, "start sensor read (type=%d, pin=%d).\n", type, pin);
     #endif
 
-	// throttle sensor reading - if last read was less than 2s then return same
+    // throttle sensor reading - if last read was less than 2s then return same
     unsigned long long now = getTime();
     if ((last_read[pin] > 0) && (now - last_read[pin] < 2000))
     {
@@ -58,7 +58,7 @@ long readDHT(int type, int pin, float &temperature, float &humidity)
         return 0;
     }
 
-	// request sensor data
+    // request sensor data
     bcm2835_gpio_fsel(pin, BCM2835_GPIO_FSEL_OUTP);
     bcm2835_gpio_write(pin, HIGH);
     usleep(10000);
@@ -67,9 +67,9 @@ long readDHT(int type, int pin, float &temperature, float &humidity)
     bcm2835_gpio_write(pin, HIGH);
     bcm2835_gpio_fsel(pin, BCM2835_GPIO_FSEL_INPT);
 
-	// wait for sensor response
-	for (timeout = 0; timeout < 1000000 && bcm2835_gpio_lev(pin) == LOW; ++timeout);
-	if (timeout >= 100000)
+    // wait for sensor response
+    for (timeout = 0; timeout < 1000000 && bcm2835_gpio_lev(pin) == LOW; ++timeout);
+    if (timeout >= 100000)
     {
         #ifdef VERBOSE
         fprintf(pTrace, "*** timeout #1\n");
@@ -81,8 +81,8 @@ long readDHT(int type, int pin, float &temperature, float &humidity)
         #endif
         return -3;
     }
-	for (timeout = 0; timeout < 1000000 && bcm2835_gpio_lev(pin) == HIGH; ++timeout);
-	if (timeout >= 100000)
+    for (timeout = 0; timeout < 1000000 && bcm2835_gpio_lev(pin) == HIGH; ++timeout);
+    if (timeout >= 100000)
     {
         #ifdef VERBOSE
         fprintf(pTrace, "*** timeout #2\n");
@@ -95,7 +95,7 @@ long readDHT(int type, int pin, float &temperature, float &humidity)
         return -3;
     }
 
-	// read data
+    // read data
     for (j = 0; j < MAXTIMINGS; ++j)
     {
         for (timeout = 0; bcm2835_gpio_lev(pin) == LOW && timeout < 50000; ++timeout);
@@ -104,57 +104,57 @@ long readDHT(int type, int pin, float &temperature, float &humidity)
         if (timeout >= 50000) break;
     }
 
-	// data decoding, get widest pulse
-	int peak = bits[1];
-	#ifdef VERBOSE
-	fprintf(pTrace, "init peak: %d\n", bits[1]);
-	#endif
-	for (int i = 2; i < j; ++i)
+    // data decoding, get widest pulse
+    int peak = bits[1];
+    #ifdef VERBOSE
+    fprintf(pTrace, "init peak: %d\n", bits[1]);
+    #endif
+    for (int i = 2; i < j; ++i)
     {
-		if (peak < bits[i])
+        if (peak < bits[i])
         {
-			peak = bits[i];
-			#ifdef VERBOSE
-			fprintf(pTrace, "update peak: %d (%d)\n", i, bits[i]);
-			#endif
-		}
-	}
+            peak = bits[i];
+            #ifdef VERBOSE
+            fprintf(pTrace, "update peak: %d (%d)\n", i, bits[i]);
+            #endif
+        }
+    }
 
-	// convert pulses to bits
-	#ifdef VERBOSE
-	fprintf(pTrace, "j=%d, peak=%d:\n", j, peak);
-	#endif
-	int k = 0;
-	for (int i = 1; i < j; ++i)
+    // convert pulses to bits
+    #ifdef VERBOSE
+    fprintf(pTrace, "j=%d, peak=%d:\n", j, peak);
+    #endif
+    int k = 0;
+    for (int i = 1; i < j; ++i)
     {
-		data[k] <<= 1;
-		if ((2 * bits[i] - peak) > 0)
+        data[k] <<= 1;
+        if ((2 * bits[i] - peak) > 0)
         {
-			data[k] |= 1;
-			#ifdef VERBOSE
-			fprintf(pTrace, "1 (%03d) ", bits[i]);
-		}
+            data[k] |= 1;
+            #ifdef VERBOSE
+            fprintf(pTrace, "1 (%03d) ", bits[i]);
+        }
         else
         {
-			fprintf(pTrace, "0 (%03d) ", bits[i]);
-			#endif
-		}
-		if (i % 8 == 0)
+            fprintf(pTrace, "0 (%03d) ", bits[i]);
+            #endif
+        }
+        if (i % 8 == 0)
         {
-			k++;
-			#ifdef VERBOSE
-			fprintf(pTrace, "\n");
-			#endif
-		}
-	}
+            k++;
+            #ifdef VERBOSE
+            fprintf(pTrace, "\n");
+            #endif
+        }
+    }
 
-	// crc checking
-	#ifdef VERBOSE
-	int crc = ((data[0] + data[1] + data[2] + data[3]) & 0xff);
-	fprintf(pTrace, "\n=> %x %x %x %x (%x/%x) : %s\n",
-		data[0], data[1], data[2], data[3], data[4],
-		crc, (data[4] == crc) ? "OK" : "ERR");
-	#endif
+    // crc checking
+    #ifdef VERBOSE
+    int crc = ((data[0] + data[1] + data[2] + data[3]) & 0xff);
+    fprintf(pTrace, "\n=> %x %x %x %x (%x/%x) : %s\n",
+        data[0], data[1], data[2], data[3], data[4],
+        crc, (data[4] == crc) ? "OK" : "ERR");
+    #endif
 
     if ((j >= 41) && (data[4] == ((data[0] + data[1] + data[2] + data[3]) & 0xff)))
     {
