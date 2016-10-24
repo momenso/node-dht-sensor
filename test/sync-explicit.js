@@ -27,8 +27,9 @@ var iid = setInterval(function() {
   var start = new Date().getTime();
   var readout = sensor.read(sensorType, gpioPin);
   var end = new Date().getTime();
-  console.log('temperature: ' + readout.temperature.toFixed(1) + '°C, ' +
-    'humidity: ' + readout.humidity.toFixed(1) + '%, ' +
-    'valid: ' + readout.isValid + ', errors: ' + readout.errors + ', ' +
-    'time: ' + (end - start) + "ms");
+  console.log(`temperature: ${readout.temperature.toFixed(1)}°C, ` +
+              `humidity: ${readout.humidity.toFixed(1)}%, ` +
+              `valid: ${readout.isValid}, ` +
+              `errors: ${readout.errors}, ` +
+              `time: ${end - start}ms`);
 }, 2500);

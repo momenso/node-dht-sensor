@@ -27,9 +27,7 @@ var iid = setInterval(function() {
       console.warn('' + err);
     } else {
       var elapsed = end - start;
-      var result = 'temperature: ' + temperature.toFixed(1) + '°C, ' +
-                   'humidity: ' + humidity.toFixed(1) + '%, ' +
-                   'time: ' + elapsed + 'ms';
+      var result = `temperature: ${temperature.toFixed(1)}°C, humidity: ${humidity.toFixed(1)}%, time: ${end - start}ms`;
       console.log(result);
       fs.appendFile('log.csv',
                   new Date().getTime() + ',' +

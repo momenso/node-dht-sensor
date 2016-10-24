@@ -36,9 +36,9 @@ var iid = setInterval(function() {
     if (err) {
       console.warn('' + err);
     } else {
-      console.log('temperature: ' + temperature.toFixed(1) + '°C, ' +
-        'humidity: ' + humidity.toFixed(1) + '%, time: ' + (end - start) + 'ms'
-      );
+      console.log(`temperature: ${temperature.toFixed(1)}°C, ` +
+                  `humidity: ${humidity.toFixed(1)}%, ` +
+                  `time: ${end - start}ms`);
     }
   });
 
