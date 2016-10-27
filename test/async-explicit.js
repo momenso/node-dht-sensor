@@ -41,4 +41,4 @@ var iid = setInterval(function() {
     }
   });
 
-}, 2500);
+}, 3000);

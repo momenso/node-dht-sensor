@@ -46,7 +46,7 @@ long readDHT(int type, int pin, float &temperature, float &humidity)
 
     // throttle sensor reading - if last read was less than 2s then return same
     unsigned long long now = getTime();
-    if ((last_read[pin] > 0) && (now - last_read[pin] < 1000)) // 2000
+    if ((last_read[pin] > 0) && (now - last_read[pin] < 3000))
     {
         #ifdef VERBOSE
         fprintf(pTrace, "*** too early to read again pin %d: %llu\n", pin, now - last_read[pin]);
