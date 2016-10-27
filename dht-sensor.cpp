@@ -11,14 +11,6 @@
 #define DHT22               22
 #define AM2302              22
 
-#ifdef VERBOSE
-#ifdef DBG_CONSOLE
-FILE *pTrace = stdout;
-#else
-FILE *pTrace = fopen("dht-sensor.log", "a");
-#endif
-#endif
-
 int initialized = 0;
 unsigned long long last_read[32] = {};
 float last_temperature[32] = {};
@@ -39,6 +31,19 @@ long readDHT(int type, int pin, float &temperature, float &humidity)
     int timeout;
     int bits[MAXTIMINGS];
     int data[MAXTIMINGS / 8] = {};
+
+    #ifdef VERBOSE
+    #ifdef DBG_CONSOLE
+    FILE *pTrace = stdout;
+    #else
+    FILE *pTrace = fopen("dht-sensor.log", "a");
+    if (pTrace == NULL)
+    {
+        puts("WARNING: unable to initialize trace file, it will be redirected to stdout.");
+        pTrace = stdout;
+    }
+    #endif
+    #endif
 
     #ifdef VERBOSE
     fprintf(pTrace, "start sensor read (type=%d, pin=%d).\n", type, pin);
@@ -231,27 +236,17 @@ long readDHT(int type, int pin, float &temperature, float &humidity)
 
 int initialize()
 {
-    #ifdef VERBOSE
-    #ifndef DBG_CONSOLE
-    if (pTrace == NULL)
-    {
-        puts("WARNING: unable to initialize trace file, it will be redirected to stdout.");
-        pTrace = stdout;
-    }
-    #endif
-    #endif
-
     if (!bcm2835_init())
     {
         #ifdef VERBOSE
-        fprintf(pTrace, "BCM2835 initialization failed.\n");
+        puts("BCM2835 initialization failed.");
         #endif
         return 1;
     }
     else
     {
         #ifdef VERBOSE
-        fprintf(pTrace, "BCM2835 initialized.\n");
+        puts("BCM2835 initialized.");
         #endif
         initialized = 1;
         memset(last_read, 0, sizeof(unsigned long long)*32);
