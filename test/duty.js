@@ -37,4 +37,4 @@ var iid = setInterval(function() {
                   function(err) {});
     }
   });
-}, 2500);
+}, 1000); // 2500

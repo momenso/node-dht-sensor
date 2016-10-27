@@ -2,13 +2,14 @@
   "author": "David Momenso",
   "name": "node-dht-sensor",
   "description": "Reads data from DHT sensors on Raspberry Pi",
-  "version": "0.0.28",
+  "version": "0.0.29",
   "repository": {
     "url": "https://github.com/momenso/node-dht-sensor"
   },
   "scripts": {
     "preinstall": "./check-lib.sh",
-    "postinstall": "node-gyp rebuild"
+    "install": "node-gyp configure",
+    "postinstall": "node-gyp build"
   },
   "main": "./build/Release/node_dht_sensor",
   "dependencies": {

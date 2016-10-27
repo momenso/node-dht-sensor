@@ -11,6 +11,14 @@
 #define DHT22               22
 #define AM2302              22
 
+#ifdef VERBOSE
+#ifdef DBG_CONSOLE
+FILE *pTrace = stdout;
+#else
+FILE *pTrace = fopen("dht-sensor.log", "a");
+#endif
+#endif
+
 int initialized = 0;
 unsigned long long last_read[32] = {};
 float last_temperature[32] = {};
@@ -33,22 +41,12 @@ long readDHT(int type, int pin, float &temperature, float &humidity)
     int data[MAXTIMINGS / 8] = {};
 
     #ifdef VERBOSE
-    #ifdef DBG_CONSOLE
-    FILE *pTrace = stdout;
-    #else
-    FILE *pTrace = fopen("dht-sensor.log", "a");
-    if (pTrace == NULL)
-    {
-        puts("WARNING: unable to initialize trace file, it will be redirected to stdout.");
-        pTrace = stdout;
-    }
-    #endif
     fprintf(pTrace, "start sensor read (type=%d, pin=%d).\n", type, pin);
     #endif
 
     // throttle sensor reading - if last read was less than 2s then return same
     unsigned long long now = getTime();
-    if ((last_read[pin] > 0) && (now - last_read[pin] < 2000))
+    if ((last_read[pin] > 0) && (now - last_read[pin] < 1000)) // 2000
     {
         #ifdef VERBOSE
         fprintf(pTrace, "*** too early to read again pin %d: %llu\n", pin, now - last_read[pin]);
@@ -81,6 +79,7 @@ long readDHT(int type, int pin, float &temperature, float &humidity)
         #endif
         return -3;
     }
+
     for (timeout = 0; timeout < 1000000 && bcm2835_gpio_lev(pin) == HIGH; ++timeout);
     if (timeout >= 100000)
     {
@@ -232,17 +231,27 @@ long readDHT(int type, int pin, float &temperature, float &humidity)
 
 int initialize()
 {
+    #ifdef VERBOSE
+    #ifndef DBG_CONSOLE
+    if (pTrace == NULL)
+    {
+        puts("WARNING: unable to initialize trace file, it will be redirected to stdout.");
+        pTrace = stdout;
+    }
+    #endif
+    #endif
+
     if (!bcm2835_init())
     {
         #ifdef VERBOSE
-        printf("BCM2835 initialization failed.\n");
+        fprintf(pTrace, "BCM2835 initialization failed.\n");
         #endif
         return 1;
     }
     else
     {
         #ifdef VERBOSE
-        printf("BCM2835 initialized.\n");
+        fprintf(pTrace, "BCM2835 initialized.\n");
         #endif
         initialized = 1;
         memset(last_read, 0, sizeof(unsigned long long)*32);
