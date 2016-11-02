@@ -24,6 +24,8 @@ If the initialization succeeds when you can call the read function to obtain the
 
 ### First Example
 
+![example1](https://cloud.githubusercontent.com/assets/420851/19934690/b925e14e-a0fe-11e6-988c-07efa4acceca.png)
+
 This sample queries a DHT22 sensor connected to the GPIO 4 and prints out the result on the console.
 
 ``` javascript
