@@ -62,7 +62,7 @@ var sensor = {
         for (var a in this.sensors) {
             var b = sensorLib.read(this.sensors[a].type, this.sensors[a].pin);
             console.log(this.sensors[a].name + ": " +
-              b.temperature.toFixed(1) + "C, " +
+              b.temperature.toFixed(1) + "°C, " +
               b.humidity.toFixed(1) + "%");
         }
         setTimeout(function() {
@@ -95,23 +95,19 @@ Standard node-gyp commands are used to build the module. So, just make sure you 
    $ node-gyp build
    ```
 
-### Verbose output
+### Tracing and Debugging
 
-Verbose output from the module can be enabled by defining ```VERBOSE``` during the module compilation. For example, this can be enabled via the binging,gyp file:
+Verbose output from the module can be enabled by by specifying the ```--dht_verbose=true``` flag when installing the node via npm.
 
-``` javascript
-{
-  'targets': [
-    {
-      'target_name': 'node-dht-sensor',
-      'sources': [ 'node-dht-sensor.cpp' ],
-      'libraries': [ '-lbcm2835' ],
-      'defines': [ 'VERBOSE']
-    }
-  ]
-}
+``` bash
+$ npm install node-dht-sensor --dht_verbose=true
 ```
 
+if you are interested in enabling trace when building directly from source you can enable the ```-Ddht_verbose``` flag when running node-gyp configure.
+
+``` bash
+$ node-gyp configure -- -Ddht_verbose=true
+```
 ### Appendix A: Quick Node.js installation guide
 
 There are many ways you can get Node.js installed on your Raspberry Pi. Here is just one of way you can do it.
