@@ -42,6 +42,8 @@ sensor.read(22, 4, function(err, temperature, humidity) {
 
 ### Multiple Sensors Example
 
+![example2](https://cloud.githubusercontent.com/assets/420851/19935318/c2fdb30c-a100-11e6-8e3f-e81f29d7e85f.png)
+
 The following example shows a method for querying multiple sensors connected to the same Raspberry Pi. For this example, we have two sensors:
 
 1. A DHT11 sensor connected to GPIO 17
