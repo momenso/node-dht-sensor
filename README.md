@@ -24,7 +24,7 @@ If the initialization succeeds when you can call the read function to obtain the
 
 ### First Example
 
-![example1](https://cloud.githubusercontent.com/assets/420851/19934690/b925e14e-a0fe-11e6-988c-07efa4acceca.png)
+![example1](https://cloud.githubusercontent.com/assets/420851/20246902/1a03bafc-a9a8-11e6-8158-d68928b2e79f.png)
 
 This sample queries a DHT22 sensor connected to the GPIO 4 and prints out the result on the console.
 
@@ -42,7 +42,7 @@ sensor.read(22, 4, function(err, temperature, humidity) {
 
 ### Multiple Sensors Example
 
-![example2](https://cloud.githubusercontent.com/assets/420851/19935318/c2fdb30c-a100-11e6-8e3f-e81f29d7e85f.png)
+![example2](https://cloud.githubusercontent.com/assets/420851/20246914/554d72c4-a9a8-11e6-9162-ae51ecdf4212.png)
 
 The following example shows a method for querying multiple sensors connected to the same Raspberry Pi. For this example, we have two sensors:
 
