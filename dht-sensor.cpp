@@ -27,7 +27,7 @@ unsigned long long getTime()
 
 long readDHT(int type, int pin, float &temperature, float &humidity)
 {
-    int j = 0;
+    int bitCount = 0;
     int timeout;
     int bits[MAXTIMINGS];
     int data[MAXTIMINGS / 8] = {};
@@ -100,11 +100,11 @@ long readDHT(int type, int pin, float &temperature, float &humidity)
     }
 
     // read data
-    for (j = 0; j < MAXTIMINGS; ++j)
+    for (bitCount = 0; bitCount < MAXTIMINGS; ++bitCount)
     {
         for (timeout = 0; bcm2835_gpio_lev(pin) == LOW && timeout < 50000; ++timeout);
         for (timeout = 0; bcm2835_gpio_lev(pin) == HIGH && timeout < 50000; ++timeout);
-        bits[j] = timeout;
+        bits[bitCount] = timeout;
         if (timeout >= 50000) break;
     }
 
@@ -113,7 +113,7 @@ long readDHT(int type, int pin, float &temperature, float &humidity)
     #ifdef VERBOSE
     fprintf(pTrace, "init peak: %d\n", bits[1]);
     #endif
-    for (int i = 2; i < j; ++i)
+    for (int i = 2; i < bitCount; ++i)
     {
         if (peak < bits[i])
         {
@@ -126,10 +126,10 @@ long readDHT(int type, int pin, float &temperature, float &humidity)
 
     // convert pulses to bits
     #ifdef VERBOSE
-    fprintf(pTrace, "j=%d, peak=%d:\n", j, peak);
+    fprintf(pTrace, "bitCount=%d, peak=%d:\n", bitCount, peak);
     #endif
     int k = 0;
-    for (int i = 1; i < j; ++i)
+    for (int i = 1; i < bitCount; ++i)
     {
         data[k] <<= 1;
         if ((2 * bits[i] - peak) > 0)
@@ -160,7 +160,12 @@ long readDHT(int type, int pin, float &temperature, float &humidity)
         crc, (data[4] == crc) ? "OK" : "ERR");
     #endif
 
-    if ((j >= 41) && (data[4] == ((data[0] + data[1] + data[2] + data[3]) & 0xff)))
+    // checks if received data is valid:
+    // - minimum of 5 bytes (40 bits)
+    // - has to be whole bytes
+    // - checksum must match
+    if ((bitCount > 40) && ((bitCount - 1) % 8 == 0) &&
+        (data[4] == ((data[0] + data[1] + data[2] + data[3]) & 0xff)))
     {
         #ifdef VERBOSE
         fprintf(pTrace, "sensor type = %d, ", type);
@@ -207,7 +212,7 @@ long readDHT(int type, int pin, float &temperature, float &humidity)
     {
         #ifdef VERBOSE
         fprintf(pTrace, "*** unexpected data: bits=%d: %d != %d + %d + %d + %d\n",
-        j, data[4], data[0], data[1], data[2], data[3]);
+        bitCount, data[4], data[0], data[1], data[2], data[3]);
         #ifdef DBG_CONSOLE
         fflush(pTrace);
         #else
