@@ -116,18 +116,18 @@ $ node-gyp configure -- -Ddht_verbose=true
 
 There are many ways you can get Node.js installed on your Raspberry Pi. Here is just one of way you can do it.
 ``` bash
-$ wget http://nodejs.org/dist/v7.1.0/node-v7.1.0-linux-armv7l.tar.xz
-$ tar xvfJ node-v7.1.0-linux-armv7l.tar.xz
-$ sudo mv node-v7.1.0-linux-armv7l /opt
-$ sudo update-alternatives --install "/usr/bin/node" "node" "/opt/node-v7.1.0-linux-armv7l/bin/node" 1
-$ sudo update-alternatives --set node /opt/node-v7.1.0-linux-armv7l/bin/node
-$ sudo update-alternatives --install "/usr/bin/npm" "npm" "/opt/node-v7.1.0-linux-armv7l/bin/npm" 1
+$ wget https://nodejs.org/dist/v8.9.1/node-v8.9.1-linux-armv7l.tar.xz
+$ tar xvfJ node-v8.9.1-linux-armv7l.tar.xz
+$ sudo mv node-v8.9.1-linux-armv7l /opt
+$ sudo update-alternatives --install "/usr/bin/node" "node" "/opt/node-v8.9.1-linux-armv7l/bin/node" 1
+$ sudo update-alternatives --set node /opt/node-v8.9.1-linux-armv7l/bin/node
+$ sudo update-alternatives --install "/usr/bin/npm" "npm" "/opt/node-v8.9.1-linux-armv7l/bin/npm" 1
 ```
 Please note that you may have to use armv6l instead of arm7l if you have an early Raspberry Pi model.
 
 ### References
 
-[1]: Node.js latest release - http://nodejs.org/dist/latest/
+[1]: Node.js download - https://nodejs.org/en/download/
 
 [2]: BCM2835 - http://www.airspayce.com/mikem/bcm2835/
 
