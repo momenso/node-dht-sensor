@@ -1,5 +1,4 @@
-// Module node-dht-sensor demo
-// Reads from two DHT sensors
+// explicit sensor read test
 var sensor = require('../build/Release/node_dht_sensor');
 var usage = 'USAGE: node sync-explicit.js [sensorType] [gpioPin] <repeats>\n' +
     '    sensorType:\n' +
