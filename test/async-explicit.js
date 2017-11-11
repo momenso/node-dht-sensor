@@ -1,8 +1,5 @@
-// Module node-dht-sensor demo
-// Read asynchronously from the sensor
-
+// explicit async sensor read test
 var sensor = require('../build/Release/node_dht_sensor');
-
 var usage = 'USAGE: node async-explicit.js [sensorType] [gpioPin] <repeats>\n' +
     '    sensorType:\n' +
     '         11: For DHT11 sensor.\n' +
@@ -40,5 +37,4 @@ var iid = setInterval(function() {
                 temperature.toFixed(1), humidity.toFixed(1), end - start);
     }
   });
-
 }, 3000);
