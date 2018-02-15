@@ -13,7 +13,7 @@
   },
   "main": "./build/Release/node_dht_sensor",
   "dependencies": {
-    "nan": "^2.7.0"
+    "nan": "2.8.0"
   },
   "license": "LGPL-3.0"
 }
