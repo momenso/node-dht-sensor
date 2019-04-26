@@ -2,7 +2,7 @@
   "author": "David Momenso",
   "name": "node-dht-sensor",
   "description": "Reads data from DHT sensors on Raspberry Pi",
-  "version": "0.0.34",
+  "version": "0.0.35",
   "repository": {
     "url": "https://github.com/momenso/node-dht-sensor"
   },
@@ -13,7 +13,7 @@
   },
   "main": "./build/Release/node_dht_sensor",
   "dependencies": {
-    "nan": "2.8.0"
+    "nan": "2.13.2"
   },
   "license": "LGPL-3.0"
 }
