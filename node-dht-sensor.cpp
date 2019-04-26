@@ -45,7 +45,7 @@ class ReadWorker : public Nan::AsyncWorker {
         argv[0] = Nan::Null();
       }
 
-      callback->Call(3, argv);
+      callback->Call(3, argv, async_resource);
     }
 
   private:
@@ -93,10 +93,10 @@ void ReadSync(const Nan::FunctionCallbackInfo<Value>& args) {
   int gpio_pin;
 
   if (args.Length() == 2) {
-    gpio_pin = args[1]->Uint32Value();
+    gpio_pin = args[1]->Uint32Value(Nan::GetCurrentContext()).ToChecked();
     // TODO: validate gpio_pin
 
-    sensor_type = args[0]->Uint32Value();
+    sensor_type = args[0]->Uint32Value(Nan::GetCurrentContext()).ToChecked();
     if (sensor_type != 11 && sensor_type != 22) {
       Nan::ThrowTypeError("specified sensor type is invalid");
       return;
@@ -155,7 +155,7 @@ void SetMaxRetries(const Nan::FunctionCallbackInfo<Value>& args) {
 			Nan::ThrowTypeError("Wrong number of arguments");
 			return;
     }
-    _max_retries = args[0]->Uint32Value();
+    _max_retries = args[0]->Uint32Value(Nan::GetCurrentContext()).ToChecked();
 }
 
 void Initialize(const Nan::FunctionCallbackInfo<Value>& args) {
@@ -174,11 +174,11 @@ void Initialize(const Nan::FunctionCallbackInfo<Value>& args) {
         Nan::ThrowTypeError("Invalid maxRetries parameter");
   			return;
       } else {
-        _max_retries = args[2]->Uint32Value();
+        _max_retries = args[2]->Uint32Value(Nan::GetCurrentContext()).ToChecked();
       }
     }
 
-    int sensor_type = args[0]->Uint32Value();
+    int sensor_type = args[0]->Uint32Value(Nan::GetCurrentContext()).ToChecked();
     if (sensor_type != 11 && sensor_type != 22) {
     	Nan::ThrowTypeError("Specified sensor type is not supported");
     	return;
@@ -186,7 +186,7 @@ void Initialize(const Nan::FunctionCallbackInfo<Value>& args) {
 
     // update parameters
     _sensor_type = sensor_type;
-    _gpio_pin = args[1]->Uint32Value();
+    _gpio_pin = args[1]->Uint32Value(Nan::GetCurrentContext()).ToChecked();
 
     args.GetReturnValue().Set(Nan::New<Boolean>(initialize() == 0));
 }
