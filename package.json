@@ -7,7 +7,6 @@
     "url": "https://github.com/momenso/node-dht-sensor"
   },
   "scripts": {
-    "preinstall": "./check-lib.sh",
     "install": "node-gyp configure",
     "postinstall": "node-gyp build"
   },
