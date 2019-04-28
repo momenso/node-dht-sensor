@@ -1,6 +1,10 @@
 # node-dht-sensor
 
-This node.js module supports querying air temperature and relative humidity from a compatible DHT sensor.
+This a simple node.js module for querying air temperature and relative humidity from a compatible DHT sensor.
+
+![npm](https://img.shields.io/npm/v/node-dht-sensor.svg?label=npm%20package)
+![npm](https://img.shields.io/npm/dm/node-dht-sensor.svg)
+![GitHub](https://img.shields.io/github/license/momenso/node-dht-sensor.svg)
 
 ## Installation
 ``` bash
