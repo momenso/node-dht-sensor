@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <sys/time.h>
-#include <bcm2835.h>
+#include "bcm2835/bcm2835.h"
 #include <unistd.h>
 
 #define BCM2708_PERI_BASE   0x20000000
