@@ -1,15 +1,19 @@
 # node-dht-sensor
 
-This node.js module supports querying air temperature and relative humidity from a compatible DHT sensor.
+This a simple node.js module for querying air temperature and relative humidity from a compatible DHT sensor.
+
+![npm](https://img.shields.io/npm/v/node-dht-sensor.svg?label=npm%20package)
+![npm](https://img.shields.io/npm/dm/node-dht-sensor.svg)
+![GitHub](https://img.shields.io/github/license/momenso/node-dht-sensor.svg)
 
 ## Installation
 ``` bash
 $ npm install node-dht-sensor
 ```
 
-## Usage
+Please note that differently from version 0.0.x there's no need to pre-install the BCM2835 library [2].
 
-This module depends on the [BCM2835](http://www.airspayce.com/mikem/bcm2835/) library that must be installed on your board before you can actually use this module.
+## Usage
 
 To initialize the sensor, you have to specify the sensor type and the [GPIO pin](https://www.raspberrypi.org/documentation/usage/gpio/) where the sensor is connected to. It should work for DHT11, DHT22 and AM2302 sensors.
 
@@ -82,20 +86,18 @@ sensor.read();
 
 Standard node-gyp commands are used to build the module. So, just make sure you have node and node-gyp as well as the Broadcom library to build the project.
 
-1. Download BCM2835 library and follow installation  [instructions](http://www.airspayce.com/mikem/bcm2835/).
-
-2. In case, you don't have node-gyp, install it first:
+1. In case, you don't have node-gyp, install it first:
    ``` bash
    $ sudo npm install -g node-gyp
    $ sudo update-alternatives --install /usr/bin/node-gyp node-gyp /opt/node-v10.15.3-linux-armv7l/bin/node-gyp 1
    ```
 
-3. Generate the configuration files
+2. Generate the configuration files
    ``` bash
    $ node-gyp configure
    ```
 
-4. Build the component
+3. Build the component
    ``` bash
    $ node-gyp build
    ```
