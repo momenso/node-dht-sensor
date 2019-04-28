@@ -14,5 +14,17 @@
   "dependencies": {
     "nan": "2.13.2"
   },
-  "license": "LGPL-3.0"
+  "license": "LGPL-3.0",
+  "keywords": [
+    "DHT",
+    "DHT11",
+    "DHT22",
+    "AM2302",
+    "sensor",
+    "temperature",
+    "humidity",
+    "raspberry",
+    "raspberry pi",
+    "rpi"
+  ]
 }
