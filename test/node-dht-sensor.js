@@ -5,6 +5,18 @@ const SENSOR_TYPE = parseInt(process.env.SENSOR_TYPE || 11, 10);
 const GPIO_PIN = parseInt(process.env.GPIO_PIN || 4, 10);
 
 describe('Initialize', () => {
+    describe('Initialize mock sensor', () => {
+        it('should initialize to provide fake readouts', () => {
+            sensor.initialize({ 
+                test: { 
+                    fake: {
+                        temperature: 42,
+                        humidity: 72
+                    }
+                }
+            });
+        });
+    });
     describe('Sensor type and GPIO pin', () => {
         it('should throw error if sensor type is not supported', () => {
             assert.throws(() => { sensor.initialize(0, 0); }, TypeError, 'Specified sensor type is not supported');
