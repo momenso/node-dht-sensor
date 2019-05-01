@@ -57,19 +57,21 @@ describe('Read sensor', () => {
         });
     });
     describe('Asynchronously', () => {
-        it('should obtain temperature and humidity', () => {
+        it('should obtain temperature and humidity', (done) => {
             sensor.read(SENSOR_TYPE, GPIO_PIN, (err, temperature, humidity) => {
                 assert.isNull(err);
                 assert.isNumber(temperature);
                 assert.isNumber(humidity);
+                done();
             });
         });
-        it('should fail when invalid sensor type is specified', () => {            
+        it('should fail when invalid sensor type is specified', (done) => {
             sensor.read(3, GPIO_PIN, (err) => {
                 assert.isNotNull(err);
                 assert.throws(() => {
                     assert.ifError(err, 'sensor type is invalid')
                 }, Error, 'sensor type is invalid');
+                done();
             });
         });
     });
