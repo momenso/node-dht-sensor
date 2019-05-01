@@ -8,11 +8,16 @@
   },
   "scripts": {
     "install": "node-gyp configure",
-    "postinstall": "node-gyp build"
+    "postinstall": "node-gyp build",
+    "test": "mocha"
   },
   "main": "./build/Release/node_dht_sensor",
   "dependencies": {
     "nan": "2.13.2"
+  },
+  "devDependencies": {
+    "chai": "^4.2.0",
+    "mocha": "^6.1.4"
   },
   "license": "LGPL-3.0",
   "keywords": [
