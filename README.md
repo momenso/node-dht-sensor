@@ -110,7 +110,16 @@ sensor.read(22, 4, function(err, temperature, humidity) {
     }
 });
 ```
-And the result will always be the configured readout value defined at initialization. You can find a complete source code example in [examples/fake-test.js](https://github.com/momenso/node-dht-sensor/blob/master/examples/fake-test.js).
+And the result will always be the configured readout value defined at initialization. 
+
+```console
+$ node examples/fake-test.js 
+temp: 21.0°C, humidity: 60.0%
+$ node examples/fake-test.js 
+temp: 21.0°C, humidity: 60.0%
+```
+
+You can find a complete source code example in [examples/fake-test.js](https://github.com/momenso/node-dht-sensor/blob/master/examples/fake-test.js).
 
 
 ### Reference for building from source
