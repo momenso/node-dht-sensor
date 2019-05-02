@@ -82,6 +82,37 @@ var sensor = {
 sensor.read();
 ```
 
+### Test mode
+
+A *test mode* of operation is available since version `0.2.0`. In this mode of operation, the library does not communicate with the sensor hardware via the **GPIO** but instead it returns a pre-configured readout value. You can use the test mode during development without the need to have an actual sensor connected.
+
+To enable the *test mode*, fake values must be defined at initialization. In the example below we specify fixed values for temperature equal to 21&deg;C and humidity equal to 60%.
+
+```javascript
+sensor.initialize({
+    test : {
+        fake: {
+            temperature: 21,
+            humidity: 60
+        }
+    }
+});
+```
+
+After initialization, we can call the `read` method as usual.
+
+```javascript
+sensor.read(22, 4, function(err, temperature, humidity) {
+    if (!err) {
+        console.log('temp: ' + temperature.toFixed(1) + '°C, ' +
+            'humidity: ' + humidity.toFixed(1) + '%'
+        );
+    }
+});
+```
+And the result will always be the configured readout value defined at initialization. You can find a complete source code example in [examples/fake-test.js](https://github.com/momenso/node-dht-sensor/blob/master/examples/fake-test.js).
+
+
 ### Reference for building from source
 
 Standard node-gyp commands are used to build the module. So, just make sure you have node and node-gyp as well as the Broadcom library to build the project.
