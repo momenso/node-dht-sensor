@@ -5,6 +5,18 @@ const SENSOR_TYPE = parseInt(process.env.SENSOR_TYPE || 11, 10);
 const GPIO_PIN = parseInt(process.env.GPIO_PIN || 4, 10);
 
 describe('Initialize', () => {
+    describe('Initialize mock sensor', () => {
+        it('should initialize to provide fake readouts', () => {
+            sensor.initialize({ 
+                test: { 
+                    fake: {
+                        temperature: 42,
+                        humidity: 72
+                    }
+                }
+            });
+        });
+    });
     describe('Sensor type and GPIO pin', () => {
         it('should throw error if sensor type is not supported', () => {
             assert.throws(() => { sensor.initialize(0, 0); }, TypeError, 'Specified sensor type is not supported');
@@ -57,19 +69,21 @@ describe('Read sensor', () => {
         });
     });
     describe('Asynchronously', () => {
-        it('should obtain temperature and humidity', () => {
+        it('should obtain temperature and humidity', (done) => {
             sensor.read(SENSOR_TYPE, GPIO_PIN, (err, temperature, humidity) => {
                 assert.isNull(err);
                 assert.isNumber(temperature);
                 assert.isNumber(humidity);
+                done();
             });
         });
-        it('should fail when invalid sensor type is specified', () => {            
+        it('should fail when invalid sensor type is specified', (done) => {
             sensor.read(3, GPIO_PIN, (err) => {
                 assert.isNotNull(err);
                 assert.throws(() => {
                     assert.ifError(err, 'sensor type is invalid')
                 }, Error, 'sensor type is invalid');
+                done();
             });
         });
     });

@@ -16,6 +16,19 @@ std::mutex sensorMutex;
 int _gpio_pin = 4;
 int _sensor_type = 11;
 int _max_retries = 3;
+bool _test_fake_enabled = false;
+float _fake_temperature = 0;
+float _fake_humidity = 0;
+
+long readSensor(int type, int pin, float &temperature, float &humidity) {
+  if (_test_fake_enabled) {
+    temperature = _fake_temperature;
+    humidity = _fake_humidity;
+    return 0;
+  } else {
+    return readDHT(type, pin, temperature, humidity);
+  }
+}
 
 class ReadWorker : public Nan::AsyncWorker {
   public:
@@ -72,7 +85,7 @@ class ReadWorker : public Nan::AsyncWorker {
       int retry = _max_retries;
       int result = 0;
       while (true) {
-        result = readDHT(sensor_type, gpio_pin, temperature, humidity);
+        result = readSensor(sensor_type, gpio_pin, temperature, humidity);
         if (result == 0 || --retry < 0) break;
         usleep(450000);
       }
@@ -120,7 +133,7 @@ void ReadSync(const Nan::FunctionCallbackInfo<Value>& args) {
   int retry = _max_retries;
   int result = 0;
   while (true) {
-    result = readDHT(sensor_type, gpio_pin, temperature, humidity);
+    result = readSensor(sensor_type, gpio_pin, temperature, humidity);
     if (result == 0 || --retry < 0) break;
     usleep(450000);
   }
@@ -158,37 +171,73 @@ void SetMaxRetries(const Nan::FunctionCallbackInfo<Value>& args) {
     _max_retries = args[0]->Uint32Value(Nan::GetCurrentContext()).ToChecked();
 }
 
+void LegacyInitialization(const Nan::FunctionCallbackInfo<Value>& args) {
+  if (!args[0]->IsNumber() || !args[1]->IsNumber()) {
+    Nan::ThrowTypeError("Invalid arguments");
+    return;
+  }
+
+  int sensor_type = args[0]->Uint32Value(Nan::GetCurrentContext()).ToChecked();
+  if (sensor_type != 11 && sensor_type != 22) {
+    Nan::ThrowTypeError("Specified sensor type is not supported");
+    return;
+  }
+  
+  // update parameters
+  _sensor_type = sensor_type;
+  _gpio_pin = args[1]->Uint32Value(Nan::GetCurrentContext()).ToChecked();
+
+  if (args.Length() >= 3) {
+    if (!args[2]->IsNumber()) {
+      Nan::ThrowTypeError("Invalid maxRetries parameter");
+      return;
+    } else {
+      _max_retries = args[2]->Uint32Value(Nan::GetCurrentContext()).ToChecked();
+    }
+  }
+}
+
 void Initialize(const Nan::FunctionCallbackInfo<Value>& args) {
-    if (args.Length() < 2) {
-			Nan::ThrowTypeError("Wrong number of arguments");
-			return;
-    }
+  if (args.Length() < 1) {
+    Nan::ThrowTypeError("Wrong number of arguments");
+    return;
+  } else if (args.Length() > 1) {
+    LegacyInitialization(args);
+    args.GetReturnValue().Set(Nan::New<Boolean>(initialize() == 0));
+  } else if (!args[0]->IsObject()) {
+    Nan::ThrowTypeError("Invalid argument: an object is expected");
+    return;
+  }
 
-    if (!args[0]->IsNumber() || !args[1]->IsNumber()) {
-			Nan::ThrowTypeError("Invalid arguments");
-			return;
-    }
+  Isolate* isolate = args.GetIsolate();
+  Local<Context> context = isolate->GetCurrentContext();
+  Local<Object> options = args[0]->ToObject(context).ToLocalChecked();
 
-    if (args.Length() >= 3) {
-      if (!args[2]->IsNumber()) {
-        Nan::ThrowTypeError("Invalid maxRetries parameter");
-  			return;
+  auto KEY_TEST = Nan::New("test").ToLocalChecked();
+  auto KEY_FAKE = Nan::New("fake").ToLocalChecked();
+  auto KEY_TEMP = Nan::New("temperature").ToLocalChecked();
+  auto KEY_HUMIDITY = Nan::New("humidity").ToLocalChecked();
+  if (Nan::Has(options, KEY_TEST).FromMaybe(true)) {
+    initialized = 1;
+    Local<Object> testKey = options->Get(context, KEY_TEST).ToLocalChecked()->ToObject(context).ToLocalChecked();
+    if (Nan::Has(testKey, KEY_FAKE).FromMaybe(true)) {
+      _test_fake_enabled = true;
+      Local<Object> fakeKey = testKey->Get(context, KEY_FAKE).ToLocalChecked()->ToObject(context).ToLocalChecked();
+      if (Nan::Has(fakeKey, KEY_TEMP).FromMaybe(true)) {
+        Local<Value> temp = fakeKey->Get(context, KEY_TEMP).ToLocalChecked();
+        _fake_temperature = temp->NumberValue(context).FromMaybe(0);
       } else {
-        _max_retries = args[2]->Uint32Value(Nan::GetCurrentContext()).ToChecked();
+        Nan::ThrowError("Test mode: temperature value must be defined for a fake");
+      }
+
+      if (Nan::Has(fakeKey, KEY_HUMIDITY).FromMaybe(true)) {
+        Local<Value> humidity = fakeKey->Get(context, KEY_HUMIDITY).ToLocalChecked();
+        _fake_humidity = humidity->NumberValue(context).FromMaybe(0);
+      } else {
+        Nan::ThrowError("Test mode: humidity value must be defined for a fake");
       }
     }
-
-    int sensor_type = args[0]->Uint32Value(Nan::GetCurrentContext()).ToChecked();
-    if (sensor_type != 11 && sensor_type != 22) {
-    	Nan::ThrowTypeError("Specified sensor type is not supported");
-    	return;
-    }
-
-    // update parameters
-    _sensor_type = sensor_type;
-    _gpio_pin = args[1]->Uint32Value(Nan::GetCurrentContext()).ToChecked();
-
-    args.GetReturnValue().Set(Nan::New<Boolean>(initialize() == 0));
+  }
 }
 
 void Init(Handle<Object> exports) {
