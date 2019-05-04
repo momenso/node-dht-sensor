@@ -87,6 +87,22 @@ describe('Read sensor', () => {
             });
         });
     });
+    describe('Asynchronously (promise)', () => {
+        it('should obtain temperature and humidity', async () => {
+            const { temperature, humidity } = await sensor.read(SENSOR_TYPE, GPIO_PIN);
+            assert.isNumber(temperature);
+            assert.isNumber(humidity);
+        });
+        it('should fail when invalid sensor type is specified', async () => {
+            try {
+              await sensor.read(3, GPIO_PIN);
+            } catch (err) {
+                assert.throws(() => {
+                    assert.ifError(err, 'sensor type is invalid')
+                }, Error, 'sensor type is invalid');
+            }
+        });
+    });
     describe('With invalid arguments', () => {
         it('should fail if too many arguments are provided', () => {
             assert.throws(() => { sensor.read(1,2,3,4); }, TypeError, 'invalid number of arguments');
