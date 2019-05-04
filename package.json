@@ -12,6 +12,10 @@
     "test": "mocha"
   },
   "main": "./build/Release/node_dht_sensor",
+  "files": [
+    "/src",
+    "/binding.gyp"
+  ],
   "dependencies": {
     "nan": "2.13.2"
   },
