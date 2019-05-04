@@ -1,5 +1,5 @@
 var assert = require('chai').assert;
-var sensor = require('../build/Release/node_dht_sensor');
+var sensor = require('../lib');
 
 const SENSOR_TYPE = parseInt(process.env.SENSOR_TYPE || 11, 10);
 const GPIO_PIN = parseInt(process.env.GPIO_PIN || 4, 10);

@@ -1,5 +1,5 @@
 // implicit sensor read test
-var sensor = require('../build/Release/node_dht_sensor');
+var sensor = require('../lib');
 
 var usage = 'USAGE: node sync-implicit.js [sensorType] [gpioPin] <repeats>\n' +
     '    sensorType:\n' +

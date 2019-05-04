@@ -1,4 +1,4 @@
-var sensor = require('../build/Release/node_dht_sensor');
+var sensor = require('../lib');
 
 sensor.initialize({
     test: {
