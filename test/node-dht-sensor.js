@@ -100,6 +100,8 @@ describe('Read sensor', () => {
                 assert.throws(() => {
                     assert.ifError(err, 'sensor type is invalid')
                 }, Error, 'sensor type is invalid');
+            } finally {
+              assert.fail('should have failed');
             }
         });
     });
