@@ -82,6 +82,51 @@ var sensor = {
 sensor.read();
 ```
 
+### Promises API
+
+Promises API provides an alternative `read` method that returns a Promise object rather than using a callback. The API is accessible via `require('node-dht-sensor').promises`.
+
+```javascript
+var sensor = require('node-dht-sensor').promises;
+
+// You can use `initialize` and `setMaxTries` just like before
+sensor.setMaxTries(10);
+sensor.initialize(22, 4);
+
+// You can still use the synchronous version of `read`:
+// var readout = sensor.readSync(22, 4);
+
+sensor.read(22, 4).then(
+    function ({ temperature, humidity }) {
+      console.log('temp: ' + temperature.toFixed(1) + '°C, ' +
+          'humidity: ' + humidity.toFixed(1) + '%'
+      );
+    },
+    function (err) {
+        console.error('Failed to read sensor data:', err);
+    }
+);
+```
+
+Using `async/await`:
+
+```javascript
+const sensor = require('node-dht-sensor').promises;
+
+async function do() {
+    try {
+        const { temperature, humidity } = await sensor.read(22, 4);
+        console.log('temp: ' + temperature.toFixed(1) + '°C, ' +
+            'humidity: ' + humidity.toFixed(1) + '%'
+        );
+    } catch (err) {
+        console.error('Failed to read sensor data:', err);
+    }
+}
+
+do();
+```
+
 ### Test mode
 
 A *test mode* of operation is available since version `0.2.0`. In this mode of operation, the library does not communicate with the sensor hardware via the **GPIO** but instead it returns a pre-configured readout value. You can use the test mode during development without the need to have an actual sensor connected.
@@ -110,12 +155,12 @@ sensor.read(22, 4, function(err, temperature, humidity) {
     }
 });
 ```
-And the result will always be the configured readout value defined at initialization. 
+And the result will always be the configured readout value defined at initialization.
 
 ```console
-$ node examples/fake-test.js 
+$ node examples/fake-test.js
 temp: 21.0°C, humidity: 60.0%
-$ node examples/fake-test.js 
+$ node examples/fake-test.js
 temp: 21.0°C, humidity: 60.0%
 ```
 

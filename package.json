@@ -11,9 +11,10 @@
     "postinstall": "node-gyp build",
     "test": "mocha"
   },
-  "main": "./build/Release/node_dht_sensor",
+  "main": "./lib",
   "files": [
     "/src",
+    "/lib",
     "/binding.gyp"
   ],
   "dependencies": {
