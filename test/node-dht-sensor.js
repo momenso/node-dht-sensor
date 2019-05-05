@@ -1,5 +1,6 @@
 var assert = require('chai').assert;
 var sensor = require('../lib');
+var psensor = require('../lib').promises;
 
 const SENSOR_TYPE = parseInt(process.env.SENSOR_TYPE || 11, 10);
 const GPIO_PIN = parseInt(process.env.GPIO_PIN || 4, 10);
@@ -89,19 +90,18 @@ describe('Read sensor', () => {
     });
     describe('Asynchronously (promise)', () => {
         it('should obtain temperature and humidity', async () => {
-            const { temperature, humidity } = await sensor.read(SENSOR_TYPE, GPIO_PIN);
+            const { temperature, humidity } = await psensor.read(SENSOR_TYPE, GPIO_PIN);
             assert.isNumber(temperature);
             assert.isNumber(humidity);
         });
         it('should fail when invalid sensor type is specified', async () => {
             try {
-              await sensor.read(3, GPIO_PIN);
+              await psensor.read(3, GPIO_PIN);
+              assert.fail('should have failed');
             } catch (err) {
                 assert.throws(() => {
                     assert.ifError(err, 'sensor type is invalid')
                 }, Error, 'sensor type is invalid');
-            } finally {
-              assert.fail('should have failed');
             }
         });
     });
