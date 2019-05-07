@@ -1,17 +1,17 @@
 // explicit sensor read test
 var sensor = require('../lib');
 var usage = 'USAGE: node sync-explicit.js [sensorType] [gpioPin] <repeats>\n' +
-    '    sensorType:\n' +
-    '         11: For DHT11 sensor.\n' +
-    '         22: For DHT22 or AM2302 sensors.\n\n' +
-    '    gpipPin:\n' +
-    '         Pin number where the sensor is physically connected to.\n\n' +
-    '    repeats:\n' +
-    '         How many times the read operation will be performed, default: 10\n';
+  '    sensorType:\n' +
+  '         11: For DHT11 sensor.\n' +
+  '         22: For DHT22 or AM2302 sensors.\n\n' +
+  '    gpipPin:\n' +
+  '         Pin number where the sensor is physically connected to.\n\n' +
+  '    repeats:\n' +
+  '         How many times the read operation will be performed, default: 10\n';
 
 if (process.argv.length < 4) {
-    console.warn(usage);
-    process.exit(1);
+  console.warn(usage);
+  process.exit(1);
 }
 
 var sensorType = parseInt(process.argv[2], 10);

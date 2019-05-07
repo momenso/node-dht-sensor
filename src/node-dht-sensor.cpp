@@ -164,11 +164,11 @@ void Read(const Nan::FunctionCallbackInfo<Value>& args) {
 }
 
 void SetMaxRetries(const Nan::FunctionCallbackInfo<Value>& args) {
-    if (args.Length() != 1) {
-			Nan::ThrowTypeError("Wrong number of arguments");
-			return;
-    }
-    _max_retries = args[0]->Uint32Value(Nan::GetCurrentContext()).ToChecked();
+  if (args.Length() != 1) {
+		Nan::ThrowTypeError("Wrong number of arguments");
+		return;
+  }
+  _max_retries = args[0]->Uint32Value(Nan::GetCurrentContext()).ToChecked();
 }
 
 void LegacyInitialization(const Nan::FunctionCallbackInfo<Value>& args) {
@@ -182,7 +182,7 @@ void LegacyInitialization(const Nan::FunctionCallbackInfo<Value>& args) {
     Nan::ThrowTypeError("Specified sensor type is not supported");
     return;
   }
-  
+
   // update parameters
   _sensor_type = sensor_type;
   _gpio_pin = args[1]->Uint32Value(Nan::GetCurrentContext()).ToChecked();
