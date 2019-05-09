@@ -1,10 +1,9 @@
-#include <node.h>
-#include <nan.h>
+#define NODE_ADDON_API_DISABLE_DEPRECATED
+
+#include <napi.h>
 #include <unistd.h>
 #include <mutex>
 #include "dht-sensor.h"
-
-using namespace v8;
 
 extern int initialized;
 extern unsigned long long last_read[32];
@@ -30,35 +29,33 @@ long readSensor(int type, int pin, float &temperature, float &humidity) {
   }
 }
 
-class ReadWorker : public Nan::AsyncWorker {
+class ReadWorker : public Napi::AsyncWorker {
   public:
-    ReadWorker(Nan::Callback *callback, int sensor_type, int gpio_pin)
-      : Nan::AsyncWorker(callback), sensor_type(sensor_type),
+    ReadWorker(Napi::Function &callback, int sensor_type, int gpio_pin)
+      : Napi::AsyncWorker(callback), sensor_type(sensor_type),
         gpio_pin(gpio_pin) { }
 
-    void Execute() {
+    void Execute() override {
       sensorMutex.lock();
       Init();
       Read();
       sensorMutex.unlock();
     }
 
-    void HandleOKCallback() {
-      Nan:: HandleScope scope;
-
-      Local<Value> argv[3];
-      argv[1] = Nan::New<Number>(temperature),
-      argv[2] = Nan::New<Number>(humidity);
+    void OnOK() override {
+      Napi::Env env = Env();
 
       if (!initialized) {
-        argv[0] = Nan::Error("failed to initialize sensor");
+        SetError("failed to initialize sensor");
       } else if (failed) {
-        argv[0] = Nan::Error("failed to read sensor");
+        SetError("failed to read sensor");
       } else {
-        argv[0] = Nan::Null();
+        Callback().Call({
+          env.Null(),
+          Napi::Number::New(env, temperature),
+          Napi::Number::New(env, humidity)
+        });
       }
-
-      callback->Call(3, argv, async_resource);
     }
 
   private:
@@ -76,7 +73,7 @@ class ReadWorker : public Nan::AsyncWorker {
 
     void Read() {
       if (sensor_type != 11 && sensor_type != 22) {
-        SetErrorMessage("sensor type is invalid");
+        SetError("sensor type is invalid");
         return;
       }
 
@@ -93,34 +90,39 @@ class ReadWorker : public Nan::AsyncWorker {
     }
 };
 
-void ReadAsync(const Nan::FunctionCallbackInfo<Value>& args) {
-  int sensor_type = Nan::To<int>(args[0]).FromJust();
-  int gpio_pin = Nan::To<int>(args[1]).FromJust();
-  Nan::Callback *callback = new Nan::Callback(args[2].As<Function>());
+Napi::Value ReadAsync(const Napi::CallbackInfo &info) {
+  int sensor_type = info[0].ToNumber().Uint32Value();
+  int gpio_pin = info[1].ToNumber().Uint32Value();
+  auto callback = info[2].As<Napi::Function>();
 
-  Nan::AsyncQueueWorker(new ReadWorker(callback, sensor_type, gpio_pin));
+  auto worker = new ReadWorker(callback, sensor_type, gpio_pin);
+  worker->Queue();
+
+  return info.Env().Undefined();
 }
 
-void ReadSync(const Nan::FunctionCallbackInfo<Value>& args) {
+Napi::Value ReadSync(const Napi::CallbackInfo &info) {
+  Napi::Env env = info.Env();
+
   int sensor_type;
   int gpio_pin;
 
-  if (args.Length() == 2) {
-    gpio_pin = args[1]->Uint32Value(Nan::GetCurrentContext()).ToChecked();
+  if (info.Length() == 2) {
+    gpio_pin = info[1].ToNumber().Uint32Value();
     // TODO: validate gpio_pin
 
-    sensor_type = args[0]->Uint32Value(Nan::GetCurrentContext()).ToChecked();
+    sensor_type = info[0].ToNumber().Uint32Value();
     if (sensor_type != 11 && sensor_type != 22) {
-      Nan::ThrowTypeError("specified sensor type is invalid");
-      return;
+      Napi::TypeError::New(env, "specified sensor type is invalid").ThrowAsJavaScriptException();
+      return env.Undefined();
     }
 
     // initialization (on demand)
     if (!initialized) {
       initialized = initialize() == 0;
       if (!initialized) {
-        Nan::ThrowTypeError("failed to initialize");
-        return;
+        Napi::TypeError::New(env, "failed to initialize").ThrowAsJavaScriptException();
+        return env.Undefined();
       }
     }
   } else {
@@ -138,112 +140,147 @@ void ReadSync(const Nan::FunctionCallbackInfo<Value>& args) {
     usleep(450000);
   }
 
-  Local<Object> readout = Nan::New<Object>();
-  readout->Set(Nan::New("humidity").ToLocalChecked(), Nan::New<Number>(humidity));
-  readout->Set(Nan::New("temperature").ToLocalChecked(), Nan::New<Number>(temperature));
-  readout->Set(Nan::New("isValid").ToLocalChecked(), Nan::New<Boolean>(result == 0));
-  readout->Set(Nan::New("errors").ToLocalChecked(), Nan::New<Number>(_max_retries - retry));
+  auto readout = Napi::Object::New(env);
+  readout.Set("humidity", humidity);
+  readout.Set("temperature", temperature);
+  readout.Set("isValid", result == 0);
+  readout.Set("errors", _max_retries - retry);
 
-  args.GetReturnValue().Set(readout);
+  return readout;
 }
 
-void Read(const Nan::FunctionCallbackInfo<Value>& args) {
-  int params = args.Length();
-  switch(params) {
+Napi::Value Read(const Napi::CallbackInfo &info) {
+  Napi::Env env = info.Env();
+
+  switch(info.Length()) {
     case 0: // no parameters, use synchronous interface
     case 2: // sensor type and GPIO pin, use synchronous interface
-      ReadSync(args);
-      break;
+      return ReadSync(info);
     case 3:
       // sensorType, gpioPin and callback, use asynchronous interface
-      ReadAsync(args);
-      break;
+      return ReadAsync(info);
     default:
-      Nan::ThrowTypeError("invalid number of arguments");
+      Napi::TypeError::New(env, "invalid number of arguments").ThrowAsJavaScriptException();
+      return env.Undefined();
   }
 }
 
-void SetMaxRetries(const Nan::FunctionCallbackInfo<Value>& args) {
-  if (args.Length() != 1) {
-		Nan::ThrowTypeError("Wrong number of arguments");
+void SetMaxRetries(const Napi::CallbackInfo &info) {
+  if (info.Length() != 1) {
+		Napi::TypeError::New(info.Env(), "Wrong number of arguments").ThrowAsJavaScriptException();
 		return;
   }
-  _max_retries = args[0]->Uint32Value(Nan::GetCurrentContext()).ToChecked();
+  _max_retries = info[0].ToNumber().Uint32Value();
 }
 
-void LegacyInitialization(const Nan::FunctionCallbackInfo<Value>& args) {
-  if (!args[0]->IsNumber() || !args[1]->IsNumber()) {
-    Nan::ThrowTypeError("Invalid arguments");
+void LegacyInitialization(const Napi::CallbackInfo &info) {
+  Napi::Env env = info.Env();
+
+  if (!info[0].IsNumber() || !info[1].IsNumber()) {
+    Napi::TypeError::New(env, "Invalid arguments").ThrowAsJavaScriptException();
     return;
   }
 
-  int sensor_type = args[0]->Uint32Value(Nan::GetCurrentContext()).ToChecked();
+  int sensor_type = info[0].ToNumber().Uint32Value();
   if (sensor_type != 11 && sensor_type != 22) {
-    Nan::ThrowTypeError("Specified sensor type is not supported");
+    Napi::TypeError::New(env, "Specified sensor type is not supported").ThrowAsJavaScriptException();
     return;
   }
 
   // update parameters
   _sensor_type = sensor_type;
-  _gpio_pin = args[1]->Uint32Value(Nan::GetCurrentContext()).ToChecked();
+  _gpio_pin = info[1].ToNumber().Uint32Value();
 
-  if (args.Length() >= 3) {
-    if (!args[2]->IsNumber()) {
-      Nan::ThrowTypeError("Invalid maxRetries parameter");
+  if (info.Length() >= 3) {
+    if (!info[2].IsNumber()) {
+      Napi::TypeError::New(env, "Invalid maxRetries parameter").ThrowAsJavaScriptException();
       return;
     } else {
-      _max_retries = args[2]->Uint32Value(Nan::GetCurrentContext()).ToChecked();
+      _max_retries = info[2].ToNumber().Uint32Value();
     }
   }
 }
 
-void Initialize(const Nan::FunctionCallbackInfo<Value>& args) {
-  if (args.Length() < 1) {
-    Nan::ThrowTypeError("Wrong number of arguments");
-    return;
-  } else if (args.Length() > 1) {
-    LegacyInitialization(args);
-    args.GetReturnValue().Set(Nan::New<Boolean>(initialize() == 0));
-  } else if (!args[0]->IsObject()) {
-    Nan::ThrowTypeError("Invalid argument: an object is expected");
-    return;
+Napi::Value Initialize(const Napi::CallbackInfo &info) {
+  Napi::Env env = info.Env();
+
+  if (info.Length() < 1) {
+    Napi::TypeError::New(env, "Wrong number of arguments").ThrowAsJavaScriptException();
+    return env.Undefined();
+  } else if (info.Length() > 1) {
+    LegacyInitialization(info);
+    return Napi::Boolean::New(env, initialize() == 0);
+  } else if (!info[0].IsObject()) {
+    Napi::TypeError::New(env, "Invalid argument: an object is expected").ThrowAsJavaScriptException();
+    return env.Undefined();
   }
 
-  Isolate* isolate = args.GetIsolate();
-  Local<Context> context = isolate->GetCurrentContext();
-  Local<Object> options = args[0]->ToObject(context).ToLocalChecked();
+  Napi::Object options = info[0].ToObject();
 
-  auto KEY_TEST = Nan::New("test").ToLocalChecked();
-  auto KEY_FAKE = Nan::New("fake").ToLocalChecked();
-  auto KEY_TEMP = Nan::New("temperature").ToLocalChecked();
-  auto KEY_HUMIDITY = Nan::New("humidity").ToLocalChecked();
-  if (Nan::Has(options, KEY_TEST).FromMaybe(true)) {
+  const auto KEY_TEST = "test";
+  const auto KEY_FAKE = "fake";
+  const auto KEY_TEMP = "temperature";
+  const auto KEY_HUMIDITY = "humidity";
+
+  if (options.Has(KEY_TEST)) {
     initialized = 1;
-    Local<Object> testKey = options->Get(context, KEY_TEST).ToLocalChecked()->ToObject(context).ToLocalChecked();
-    if (Nan::Has(testKey, KEY_FAKE).FromMaybe(true)) {
+    Napi::Object testKey = options.Get(KEY_TEST).ToObject();
+    if (env.IsExceptionPending()) {
+      env.GetAndClearPendingException();
+      Napi::TypeError::New(env, "Invalid argument: 'options.test' key must be an object").ThrowAsJavaScriptException();
+      return env.Undefined();
+    }
+
+    if (testKey.Has(KEY_FAKE)) {
       _test_fake_enabled = true;
-      Local<Object> fakeKey = testKey->Get(context, KEY_FAKE).ToLocalChecked()->ToObject(context).ToLocalChecked();
-      if (Nan::Has(fakeKey, KEY_TEMP).FromMaybe(true)) {
-        Local<Value> temp = fakeKey->Get(context, KEY_TEMP).ToLocalChecked();
-        _fake_temperature = temp->NumberValue(context).FromMaybe(0);
-      } else {
-        Nan::ThrowError("Test mode: temperature value must be defined for a fake");
+      Napi::Object fakeKey = testKey.Get(KEY_FAKE).ToObject();
+      if (env.IsExceptionPending()) {
+        env.GetAndClearPendingException();
+        Napi::TypeError::New(env, "Invalid argument: 'options.test.fake' must be an object")
+          .ThrowAsJavaScriptException();
+        return env.Undefined();
       }
 
-      if (Nan::Has(fakeKey, KEY_HUMIDITY).FromMaybe(true)) {
-        Local<Value> humidity = fakeKey->Get(context, KEY_HUMIDITY).ToLocalChecked();
-        _fake_humidity = humidity->NumberValue(context).FromMaybe(0);
+      if (fakeKey.Has(KEY_TEMP)) {
+        Napi::Number temp = fakeKey.Get(KEY_TEMP).ToNumber();
+        if (env.IsExceptionPending()) {
+          env.GetAndClearPendingException();
+          Napi::TypeError::New(env, "Invalid argument: 'options.test.fake.temperature' must be a number")
+            .ThrowAsJavaScriptException();
+          return env.Undefined();
+        }
+
+        _fake_temperature = temp.FloatValue();
       } else {
-        Nan::ThrowError("Test mode: humidity value must be defined for a fake");
+        Napi::Error::New(env, "Test mode: temperature value must be defined for a fake").ThrowAsJavaScriptException();
+        return env.Undefined();
+      }
+
+      if (fakeKey.Has(KEY_HUMIDITY)) {
+        Napi::Number temp = fakeKey.Get(KEY_HUMIDITY).ToNumber();
+        if (env.IsExceptionPending()) {
+          env.GetAndClearPendingException();
+          Napi::TypeError::New(env, "Invalid argument: 'options.test.fake.humidity' must be a number")
+            .ThrowAsJavaScriptException();
+            return env.Undefined();
+        }
+
+      _fake_humidity = temp.FloatValue();
+      } else {
+        Napi::Error::New(env, "Test mode: humidity value must be defined for a fake").ThrowAsJavaScriptException();
+        return env.Undefined();
       }
     }
   }
+
+  return env.Undefined();
 }
 
-void Init(Handle<Object> exports) {
-	Nan::SetMethod(exports, "read", Read);
-	Nan::SetMethod(exports, "initialize", Initialize);
-  Nan::SetMethod(exports, "setMaxRetries", SetMaxRetries);
+Napi::Object Init(Napi::Env env, Napi::Object exports) {
+  exports.Set("read", Napi::Function::New(env, Read));
+  exports.Set("initialize", Napi::Function::New(env, Initialize));
+  exports.Set("setMaxRetries", Napi::Function::New(env, SetMaxRetries));
+  return exports;
 }
 
-NODE_MODULE(node_dht_sensor, Init);
+NODE_API_MODULE(NODE_GYP_MODULE_NAME, Init);
