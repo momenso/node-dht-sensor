@@ -168,8 +168,8 @@ Napi::Value Read(const Napi::CallbackInfo &info) {
 
 void SetMaxRetries(const Napi::CallbackInfo &info) {
   if (info.Length() != 1) {
-		Napi::TypeError::New(info.Env(), "Wrong number of arguments").ThrowAsJavaScriptException();
-		return;
+    Napi::TypeError::New(info.Env(), "Wrong number of arguments").ThrowAsJavaScriptException();
+    return;
   }
   _max_retries = info[0].ToNumber().Uint32Value();
 }
