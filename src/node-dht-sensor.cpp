@@ -4,6 +4,7 @@
 #include <unistd.h>
 #include <mutex>
 #include "dht-sensor.h"
+#include "util.h"
 
 extern int initialized;
 extern unsigned long long last_read[32];
@@ -222,54 +223,46 @@ Napi::Value Initialize(const Napi::CallbackInfo &info) {
   const auto KEY_TEMP = "temperature";
   const auto KEY_HUMIDITY = "humidity";
 
-  if (options.Has(KEY_TEST)) {
+  Napi::Value testKeyValue = objectGetDefined(options, KEY_TEST);
+  if (!testKeyValue.IsEmpty()) {
+    Napi::Object testKey = testKeyValue.ToObject();
     initialized = 1;
-    Napi::Object testKey = options.Get(KEY_TEST).ToObject();
-    if (env.IsExceptionPending()) {
-      env.GetAndClearPendingException();
-      Napi::TypeError::New(env, "Invalid argument: 'options.test' key must be an object").ThrowAsJavaScriptException();
+
+    Napi::Value fakeKeyValue = objectGetDefined(testKey, KEY_FAKE);
+    if (fakeKeyValue.IsEmpty()) {
+      Napi::TypeError::New(env, "Invalid argument: 'options.test.fake' is missing or is not an object").ThrowAsJavaScriptException();
       return env.Undefined();
     }
 
-    if (testKey.Has(KEY_FAKE)) {
-      _test_fake_enabled = true;
-      Napi::Object fakeKey = testKey.Get(KEY_FAKE).ToObject();
-      if (env.IsExceptionPending()) {
-        env.GetAndClearPendingException();
-        Napi::TypeError::New(env, "Invalid argument: 'options.test.fake' must be an object")
+    Napi::Object fakeKey = fakeKeyValue.ToObject();
+    _test_fake_enabled = true;
+
+    if (fakeKey.Has(KEY_TEMP)) {
+      Napi::Value temp = fakeKey.Get(KEY_TEMP);
+      if (!temp.IsNumber()) {
+        Napi::TypeError::New(env, "Invalid argument: 'options.test.fake.temperature' must be a number")
           .ThrowAsJavaScriptException();
         return env.Undefined();
       }
 
-      if (fakeKey.Has(KEY_TEMP)) {
-        Napi::Number temp = fakeKey.Get(KEY_TEMP).ToNumber();
-        if (env.IsExceptionPending()) {
-          env.GetAndClearPendingException();
-          Napi::TypeError::New(env, "Invalid argument: 'options.test.fake.temperature' must be a number")
-            .ThrowAsJavaScriptException();
-          return env.Undefined();
-        }
+      _fake_temperature = temp.As<Napi::Number>().FloatValue();
+    } else {
+      Napi::Error::New(env, "Test mode: temperature value must be defined for a fake").ThrowAsJavaScriptException();
+      return env.Undefined();
+    }
 
-        _fake_temperature = temp.FloatValue();
-      } else {
-        Napi::Error::New(env, "Test mode: temperature value must be defined for a fake").ThrowAsJavaScriptException();
+    if (fakeKey.Has(KEY_HUMIDITY)) {
+      Napi::Value humidity = fakeKey.Get(KEY_HUMIDITY);
+      if (!humidity.IsNumber()) {
+        Napi::TypeError::New(env, "Invalid argument: 'options.test.fake.humidity' must be a number")
+          .ThrowAsJavaScriptException();
         return env.Undefined();
       }
 
-      if (fakeKey.Has(KEY_HUMIDITY)) {
-        Napi::Number temp = fakeKey.Get(KEY_HUMIDITY).ToNumber();
-        if (env.IsExceptionPending()) {
-          env.GetAndClearPendingException();
-          Napi::TypeError::New(env, "Invalid argument: 'options.test.fake.humidity' must be a number")
-            .ThrowAsJavaScriptException();
-            return env.Undefined();
-        }
-
-      _fake_humidity = temp.FloatValue();
-      } else {
-        Napi::Error::New(env, "Test mode: humidity value must be defined for a fake").ThrowAsJavaScriptException();
-        return env.Undefined();
-      }
+      _fake_humidity = humidity.As<Napi::Number>().FloatValue();
+    } else {
+      Napi::Error::New(env, "Test mode: humidity value must be defined for a fake").ThrowAsJavaScriptException();
+      return env.Undefined();
     }
   }
 
