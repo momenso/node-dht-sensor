@@ -17,6 +17,28 @@ describe('Initialize', () => {
         }
       });
     });
+    it('should fail when initializing fake readout without temperature value', () => {
+      assert.throws(() => {
+        sensor.initialize({
+          test: {
+            fake: {
+              humidity: 60
+            }
+          }
+        });
+      }, Error, 'Test mode: temperature value must be defined for a fake');
+    });
+    it('should fail when initializing fake readout without humidity value', () => {
+    assert.throws(() => {
+      sensor.initialize({
+        test: {
+          fake: {
+            temperature: 17
+          }
+        }
+      });
+    }, Error, 'Test mode: humidity value must be defined for a fake');
+    });
   });
   describe('Sensor type and GPIO pin', () => {
     it('should throw error if sensor type is not supported', () => {
