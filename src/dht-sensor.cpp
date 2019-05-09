@@ -19,7 +19,7 @@ float last_humidity[32] = {};
 unsigned long long getTime()
 {
   struct timeval tv;
-  gettimeofday(&tv, NULL);
+  gettimeofday(&tv, nullptr);
   unsigned long long time = (unsigned long long)(tv.tv_sec) * 1000 +
                             (unsigned long long)(tv.tv_usec) / 1000;
   return time;
@@ -37,7 +37,7 @@ long readDHT(int type, int pin, float &temperature, float &humidity)
   FILE *pTrace = stdout;
   #else
   FILE *pTrace = fopen("dht-sensor.log", "a");
-  if (pTrace == NULL)
+  if (pTrace == nullptr)
   {
     puts("WARNING: unable to initialize trace file, it will be redirected to stdout.");
     pTrace = stdout;

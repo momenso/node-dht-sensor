@@ -18,7 +18,7 @@
     "/binding.gyp"
   ],
   "dependencies": {
-    "nan": "2.13.2"
+    "node-addon-api": "^1.6.3"
   },
   "devDependencies": {
     "chai": "^4.2.0",
