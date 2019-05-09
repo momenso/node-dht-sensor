@@ -210,7 +210,7 @@ Napi::Value Initialize(const Napi::CallbackInfo &info) {
     return env.Undefined();
   } else if (info.Length() > 1) {
     LegacyInitialization(info);
-    return Napi::Boolean::New(env, initialize() == 0);
+    return Napi::Boolean::New(env, initialized || initialize() == 0);
   } else if (!info[0].IsObject()) {
     Napi::TypeError::New(env, "Invalid argument: an object is expected").ThrowAsJavaScriptException();
     return env.Undefined();
