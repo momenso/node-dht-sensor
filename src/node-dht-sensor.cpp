@@ -165,8 +165,8 @@ void Read(const Nan::FunctionCallbackInfo<Value>& args) {
 
 void SetMaxRetries(const Nan::FunctionCallbackInfo<Value>& args) {
   if (args.Length() != 1) {
-		Nan::ThrowTypeError("Wrong number of arguments");
-		return;
+    Nan::ThrowTypeError("Wrong number of arguments");
+    return;
   }
   _max_retries = args[0]->Uint32Value(Nan::GetCurrentContext()).ToChecked();
 }
@@ -241,8 +241,8 @@ void Initialize(const Nan::FunctionCallbackInfo<Value>& args) {
 }
 
 void Init(Handle<Object> exports) {
-	Nan::SetMethod(exports, "read", Read);
-	Nan::SetMethod(exports, "initialize", Initialize);
+  Nan::SetMethod(exports, "read", Read);
+  Nan::SetMethod(exports, "initialize", Initialize);
   Nan::SetMethod(exports, "setMaxRetries", SetMaxRetries);
 }
 
