@@ -43,12 +43,12 @@ describe('Initialize', () => {
 });
 
 describe('Set max retries', () => {
-    it('should fail if an argument is not provided', () => {
-        assert.throws(sensor.setMaxRetries, TypeError, 'Wrong number of arguments');
-    });
-    it('should set max retries', () => {
-        sensor.setMaxRetries(5);
-    });
+  it('should fail if an argument is not provided', () => {
+    assert.throws(sensor.setMaxRetries, TypeError, 'Wrong number of arguments');
+  });
+  it('should set max retries', () => {
+    sensor.setMaxRetries(5);
+  });
 });
 
 describe('Read sensor', () => {
