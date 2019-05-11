@@ -1,4 +1,4 @@
-var sensor = require('../lib');
+var sensor = require("../lib");
 
 sensor.initialize({
   test: {
@@ -9,11 +9,15 @@ sensor.initialize({
   }
 });
 
-sensor.read(22, 4, function (err, temperature, humidity) {
+sensor.read(22, 4, function(err, temperature, humidity) {
   if (!err) {
     console.log(
-      'temp: ' + temperature.toFixed(1) + '°C, ' +
-      'humidity: ' + humidity.toFixed(1) + '%'
+      "temp: " +
+        temperature.toFixed(1) +
+        "°C, " +
+        "humidity: " +
+        humidity.toFixed(1) +
+        "%"
     );
   }
 });

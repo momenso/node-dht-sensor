@@ -22,7 +22,15 @@
   },
   "devDependencies": {
     "chai": "^4.2.0",
-    "mocha": "^6.1.4"
+    "husky": "^2.2.0",
+    "mocha": "^6.1.4",
+    "prettier": "1.17.0",
+    "pretty-quick": "^1.10.0"
+  },
+  "husky": {
+    "hooks": {
+      "pre-commit": "pretty-quick --staged"
+    }
   },
   "license": "LGPL-3.0",
   "keywords": [
