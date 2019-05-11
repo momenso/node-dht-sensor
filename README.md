@@ -98,21 +98,17 @@ Promises API provides an alternative `read` method that returns a Promise object
 var sensor = require("node-dht-sensor").promises;
 
 // You can use `initialize` and `setMaxTries` just like before
-sensor.setMaxTries(10);
-sensor.initialize(22, 4);
+sensor.setMaxRetries(10);
+sensor.initialize(22, 17);
 
 // You can still use the synchronous version of `read`:
 // var readout = sensor.readSync(22, 4);
 
-sensor.read(22, 4).then(
-  function({ temperature, humidity }) {
+sensor.read(22, 17).then(
+  function(res) {
     console.log(
-      "temp: " +
-        temperature.toFixed(1) +
-        "°C, " +
-        "humidity: " +
-        humidity.toFixed(1) +
-        "%"
+      `temp: ${res.temperature.toFixed(1)}°C, ` +
+        `humidity: ${res.humidity.toFixed(1)}%`
     );
   },
   function(err) {
@@ -128,14 +124,10 @@ const sensor = require("node-dht-sensor").promises;
 
 async function exec() {
   try {
-    const { temperature, humidity } = await sensor.read(22, 4);
+    const res = await sensor.read(22, 4);
     console.log(
-      "temp: " +
-        temperature.toFixed(1) +
-        "°C, " +
-        "humidity: " +
-        humidity.toFixed(1) +
-        "%"
+      `temp: ${res.temperature.toFixed(1)}°C, ` +
+        `humidity: ${res.humidity.toFixed(1)}%`
     );
   } catch (err) {
     console.error("Failed to read sensor data:", err);
