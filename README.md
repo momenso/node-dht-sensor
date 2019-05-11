@@ -160,12 +160,8 @@ After initialization, we can call the `read` method as usual.
 sensor.read(22, 4, function(err, temperature, humidity) {
   if (!err) {
     console.log(
-      "temp: " +
-        temperature.toFixed(1) +
-        "°C, " +
-        "humidity: " +
-        humidity.toFixed(1) +
-        "%"
+      `temp: ${temperature.toFixed(1)}°C, ` +
+        `humidity: ${humidity.toFixed(1)}%`
     );
   }
 });
