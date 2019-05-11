@@ -1,6 +1,6 @@
 # node-dht-sensor
 
-This a simple node.js module for querying air temperature and relative humidity from a compatible DHT sensor.
+A simple node.js module for reading temperature and relative humidity using a compatible DHT sensor.
 
 [![Build Status](https://travis-ci.org/momenso/node-dht-sensor.svg?branch=master)](https://travis-ci.org/momenso/node-dht-sensor)
 [![npm](https://img.shields.io/npm/v/node-dht-sensor.svg?label=npm%20package)](https://www.npmjs.com/package/node-dht-sensor)
@@ -13,7 +13,7 @@ This a simple node.js module for querying air temperature and relative humidity 
 $ npm install node-dht-sensor
 ```
 
-Please note that differently from version 0.0.x there's no need to pre-install the BCM2835 library [2].
+Please note that differently from versions 0.0.x there's no need to pre-install the BCM2835 library [2].
 
 ## Usage
 
