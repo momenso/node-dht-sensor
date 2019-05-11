@@ -9,7 +9,7 @@ This a simple node.js module for querying air temperature and relative humidity 
 
 ## Installation
 
-```bash
+```shell session
 $ npm install node-dht-sensor
 ```
 
@@ -188,7 +188,7 @@ sensor.read(22, 4, function(err, temperature, humidity) {
 
 And the result will always be the configured readout value defined at initialization.
 
-```console
+```shell session
 $ node examples/fake-test.js
 temp: 21.0°C, humidity: 60.0%
 $ node examples/fake-test.js
@@ -203,19 +203,19 @@ Standard node-gyp commands are used to build the module. So, just make sure you 
 
 1. In case, you don't have node-gyp, install it first:
 
-   ```bash
+   ```shell session
    $ sudo npm install -g node-gyp
    $ sudo update-alternatives --install /usr/bin/node-gyp node-gyp /opt/node-v10.15.3-linux-armv7l/bin/node-gyp 1
    ```
 
 2. Generate the configuration files
 
-   ```bash
+   ```shell session
    $ node-gyp configure
    ```
 
 3. Build the component
-   ```bash
+   ```shell session
    $ node-gyp build
    ```
 
@@ -223,13 +223,13 @@ Standard node-gyp commands are used to build the module. So, just make sure you 
 
 Verbose output from the module can be enabled by by specifying the `--dht_verbose=true` flag when installing the node via npm.
 
-```bash
+```shell session
 $ npm install node-dht-sensor --dht_verbose=true
 ```
 
 if you are interested in enabling trace when building directly from source you can enable the `-Ddht_verbose` flag when running node-gyp configure.
 
-```bash
+```shell session
 $ node-gyp configure -- -Ddht_verbose=true
 ```
 
@@ -237,7 +237,7 @@ $ node-gyp configure -- -Ddht_verbose=true
 
 There are many ways you can get Node.js installed on your Raspberry Pi. Here is just one of way you can do it.
 
-```bash
+```shell session
 $ wget https://nodejs.org/dist/v10.15.3/node-v10.15.3-linux-armv7l.tar.xz
 $ tar xvfJ node-v10.15.3-linux-armv7l.tar.xz
 $ sudo mv node-v10.15.3-linux-armv7l /opt
