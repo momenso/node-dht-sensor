@@ -56,7 +56,7 @@ The following example shows a method for querying multiple sensors connected to 
 ```javascript
 var sensorLib = require("node-dht-sensor");
 
-var sensor = {
+var app = {
   sensors: [
     {
       name: "Indoor",
@@ -70,24 +70,24 @@ var sensor = {
     }
   ],
   read: function() {
-    for (var a in this.sensors) {
-      var b = sensorLib.read(this.sensors[a].type, this.sensors[a].pin);
+    for (var sensor in this.sensors) {
+      var readout = sensorLib.read(
+        this.sensors[sensor].type,
+        this.sensors[sensor].pin
+      );
       console.log(
-        this.sensors[a].name +
-          ": " +
-          b.temperature.toFixed(1) +
-          "°C, " +
-          b.humidity.toFixed(1) +
-          "%"
+        `[${this.sensors[sensor].name}] ` +
+          `temperature: ${readout.temperature.toFixed(1)}°C, ` +
+          `humidity: ${readout.humidity.toFixed(1)}%`
       );
     }
     setTimeout(function() {
-      sensor.read();
+      app.read();
     }, 2000);
   }
 };
 
-sensor.read();
+app.read();
 ```
 
 ### Promises API
