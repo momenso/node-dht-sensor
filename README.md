@@ -32,21 +32,14 @@ If the initialization succeeds when you can call the read function to obtain the
 
 ![example1](https://cloud.githubusercontent.com/assets/420851/20246902/1a03bafc-a9a8-11e6-8158-d68928b2e79f.png)
 
-This sample queries a DHT22 sensor connected to the GPIO 4 and prints out the result on the console.
+This sample queries a DHT11 sensor connected to the GPIO 4 and prints out the result on the console.
 
 ```javascript
 var sensor = require("node-dht-sensor");
 
-sensor.read(22, 4, function(err, temperature, humidity) {
+sensor.read(11, 4, function(err, temperature, humidity) {
   if (!err) {
-    console.log(
-      "temp: " +
-        temperature.toFixed(1) +
-        "°C, " +
-        "humidity: " +
-        humidity.toFixed(1) +
-        "%"
-    );
+    console.log(`temp: ${temperature}°C, humidity: ${humidity}%`);
   }
 });
 ```
