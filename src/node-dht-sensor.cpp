@@ -44,8 +44,13 @@ public:
   void Execute() override
   {
     sensorMutex.lock();
-    Init();
-    Read();
+
+    if (Init()) {
+      Read();
+    } else {
+      SetError("failed to initialize sensor");
+    }
+
     sensorMutex.unlock();
   }
 
@@ -76,12 +81,14 @@ private:
   float temperature = 0;
   float humidity = 0;
 
-  void Init()
+  bool Init()
   {
     if (!initialized)
     {
       initialized = initialize() == 0;
     }
+
+    return initialized;
   }
 
   void Read()
