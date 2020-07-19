@@ -111,6 +111,9 @@ private:
       usleep(450000);
     }
     failed = result != 0;
+    if (failed) {
+      SetError("failed to read sensor");
+    }
   }
 };
 
