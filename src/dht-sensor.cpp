@@ -66,7 +66,7 @@ long readDHT(int type, int pin, float &temperature, float &humidity)
   bcm2835_gpio_write(pin, HIGH);
   usleep(10000);
   bcm2835_gpio_write(pin, LOW);
-  usleep(type == 11 ? 18000 : 800);
+  usleep(type == 11 ? 18000 : 2500);
   bcm2835_gpio_write(pin, HIGH);
   bcm2835_gpio_fsel(pin, BCM2835_GPIO_FSEL_INPT);
 
