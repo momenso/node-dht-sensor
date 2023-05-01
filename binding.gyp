@@ -2,11 +2,11 @@
   "targets": [
     {
       "variables": {
-        "dht_verbose%": "false"
+        "dht_verbose%": "false",
+        "banana_pro%": "false"
       },
       "target_name": "node_dht_sensor",
       "sources": [
-        "src/bcm2835/bcm2835.c",
         "src/node-dht-sensor.cpp",
         "src/dht-sensor.cpp",
         "src/util.cpp"
@@ -21,6 +21,17 @@
       "conditions": [
         ["dht_verbose=='true'", {
           "defines": [ "VERBOSE" ]
+        }],
+        ["banana_pro=='true'", {
+          "sources": [
+            "src/bcm2835_bp/bcm2835.c",
+          ],
+          "defines": [ "BANANA_PRO" ]
+        }],
+        ["banana_pro=='false'", {
+          "sources": [
+            "src/bcm2835/bcm2835.c",
+          ]
         }]
       ]
     }
