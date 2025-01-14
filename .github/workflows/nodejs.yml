@@ -11,13 +11,17 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        node-version: [8.x, 10.x, 12.x]
+        node-version: [16.x, 18.x, 20.x] # Updated Node.js versions
     steps:
     - uses: actions/checkout@v3
     - name: Use Node.js ${{ matrix.node-version }}
       uses: actions/setup-node@v3
       with:
         node-version: ${{ matrix.node-version }}
+        cache: 'npm' # Caches npm modules
     - run: npm ci
+    - name: Install build tools (if needed)
+      run: sudo apt-get install -y build-essential python3 make
+    - run: npm rebuild node-gyp # Rebuild node-gyp if necessary
     - run: npm run build --if-present
     - run: npm test
