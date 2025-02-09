@@ -1,7 +1,13 @@
 #include <stdio.h>
 #include <string.h>
 #include <sys/time.h>
+
+#ifdef BANANA_PRO
+#include "bcm2835_bp/bcm2835.h"
+#else
 #include "bcm2835/bcm2835.h"
+#endif
+
 #include <unistd.h>
 
 #define BCM2708_PERI_BASE   0x20000000
