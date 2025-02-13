@@ -1,10 +1,12 @@
 #ifndef ABSTRACT_GPIO
 #define ABSTRACT_GPIO
 
-enum GpioDirection { GPIO_UNSET = -1, GPIO_IN, GPIO_OUT };
-enum GpioPinState { GPIO_LOW, GPIO_HIGH };
+#define MAX_GPIO_PIN_NUMBER 63
 
-int gpioInitialize();
+enum GpioDirection { GPIO_UNSET = -1, GPIO_IN, GPIO_OUT };
+enum GpioPinState { GPIO_READ_FAILED = -1, GPIO_LOW, GPIO_HIGH };
+
+bool gpioInitialize();
 void gpioWrite(int pin, GpioPinState state);
 GpioPinState gpioRead(int pin);
 

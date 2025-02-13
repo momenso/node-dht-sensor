@@ -1,25 +1,56 @@
 #include "abstract-gpio.h"
 
 #include <algorithm>
-#include <stdio.h>
 #include "bcm2835/bcm2835.h"
+#include <fstream>
 #include <gpiod.h>
-
-#define MAX_LINES 100
+#include <regex>
+#include <stdio.h>
+#include <string>
 
 static bool useGpiod = false;
 static gpiod_chip *theChip = NULL;
-static gpiod_line *lines[MAX_LINES + 1];
-static GpioDirection lastDirection[MAX_LINES + 1];
+static gpiod_line *lines[MAX_GPIO_PIN_NUMBER + 1];
+static GpioDirection lastDirection[MAX_GPIO_PIN_NUMBER + 1];
 
-int gpioInitialize()
+static void gpiodCleanUp()
 {
-  if (!bcm2835_init() || true)
+  for (int i = 1; i <= MAX_GPIO_PIN_NUMBER; ++i)
   {
-    #ifdef VERBOSE
-    puts("BCM2835 initialization failed.");
-    #endif
+    if (lines[i] != NULL)
+    {
+      gpiod_line_release(lines[i]);
+    }
+  }
 
+  gpiod_chip_close(theChip);
+}
+
+bool gpioInitialize()
+{
+  bool isPi5 = false;
+  std::ifstream file("/proc/cpuinfo");
+  std::string line;
+
+  if (file.is_open())
+  {
+    std::regex pattern(R"(Model\s+:\s+Raspberry Pi (\d+))");
+    std::smatch match;
+
+    while (std::getline(file, line))
+    {
+      if (std::regex_search(line, match, pattern) && std::stoi(match[1]) > 4)
+      {
+        isPi5 = true;
+        break;
+      }
+    }
+
+    file.close();
+  }
+
+  if (isPi5)
+  {
     theChip = gpiod_chip_open_by_name("gpiochip0");
 
     if (theChip == NULL)
@@ -27,25 +58,33 @@ int gpioInitialize()
       #ifdef VERBOSE
       puts("libgpiod initialization failed.");
       #endif
-      return 1;
+      return false;
     }
     else
     {
       #ifdef VERBOSE
       puts("libgpiod initialized.");
       #endif
-      std::fill(lines, lines + MAX_LINES + 1, (gpiod_line*) NULL);
-      std::fill(lastDirection, lastDirection + MAX_LINES + 1, GPIO_UNSET);
+      std::fill(lines, lines + MAX_GPIO_PIN_NUMBER + 1, (gpiod_line*) NULL);
+      std::fill(lastDirection, lastDirection + MAX_GPIO_PIN_NUMBER + 1, GPIO_UNSET);
       useGpiod = true;
-      return 0;
+      std::atexit(gpiodCleanUp);
+      return true;
     }
+  }
+  else if (!bcm2835_init())
+  {
+    #ifdef VERBOSE
+    puts("BCM2835 initialization failed.");
+    #endif
+    return false;
   }
   else
   {
     #ifdef VERBOSE
     puts("BCM2835 initialized.");
     #endif
-    return 0;
+    return true;
   }
 }
 
@@ -105,7 +144,8 @@ GpioPinState gpioRead(int pin)
   {
     return gpiod_line_get_value(getLine(pin, GPIO_IN)) == 0 ? GPIO_LOW : GPIO_HIGH;
   }
-  else {
+  else
+  {
     if (lastDirection[pin] != GPIO_IN)
     {
       bcm2835_gpio_fsel(pin, BCM2835_GPIO_FSEL_INPT);

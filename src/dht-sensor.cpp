@@ -237,7 +237,7 @@ long readDHT(int type, int pin, float &temperature, float &humidity)
 
 int initialize()
 {
-  if (gpioInitialize() == 0)
+  if (gpioInitialize())
   {
     initialized = 1;
     memset(last_read, 0, sizeof(unsigned long long)*32);
