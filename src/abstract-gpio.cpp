@@ -9,7 +9,7 @@
 
 static bool useGpiod = false;
 static gpiod_chip *theChip = NULL;
-static gpiod_line* lines[MAX_LINES + 1];
+static gpiod_line *lines[MAX_LINES + 1];
 static GpioDirection lastDirection[MAX_LINES + 1];
 
 int gpioInitialize()
@@ -34,7 +34,7 @@ int gpioInitialize()
       #ifdef VERBOSE
       puts("libgpiod initialized.");
       #endif
-      std::fill(lines, lines + MAX_LINES + 1, NULL);
+      std::fill(lines, lines + MAX_LINES + 1, (gpiod_line*) NULL);
       std::fill(lastDirection, lastDirection + MAX_LINES + 1, GPIO_UNSET);
       useGpiod = true;
       return 0;
