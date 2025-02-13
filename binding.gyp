@@ -18,6 +18,9 @@
       "dependencies": [
         "<!(node -p \"require('node-addon-api').gyp\")"
       ],
+      'libraries': [
+        '-lgpiod'
+      ],
       "defines": [ 'NAPI_DISABLE_CPP_EXCEPTIONS' ],
       "conditions": [
         ["dht_verbose=='true'", {

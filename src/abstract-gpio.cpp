@@ -14,7 +14,7 @@ static GpioDirection lastDirection[MAX_LINES + 1];
 
 int gpioInitialize()
 {
-  if (!bcm2835_init())
+  if (!bcm2835_init() || true)
   {
     #ifdef VERBOSE
     puts("BCM2835 initialization failed.");
@@ -51,8 +51,14 @@ int gpioInitialize()
 
 static gpiod_line* getLine(int pin, GpioDirection direction)
 {
-  if (lines[pin] == NULL)
+  if (lines[pin] == NULL || lastDirection[pin] != direction)
   {
+    if (lines[pin] != NULL)
+    {
+      gpiod_line_release(lines[pin]);
+      lines[pin] = NULL;
+    }
+
     lines[pin] = gpiod_chip_get_line(theChip, pin);
   }
 
