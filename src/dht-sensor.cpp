@@ -60,13 +60,11 @@ long readDHT(int type, int pin, float &temperature, float &humidity)
   }
 
   // request sensor data
-  gpioSetDirection(pin, GPIO_OUT);
   gpioWrite(pin, GPIO_HIGH);
   usleep(10000);
   gpioWrite(pin, GPIO_LOW);
   usleep(type == 11 ? 18000 : 2500);
   gpioWrite(pin, GPIO_HIGH);
-  gpioSetDirection(pin, GPIO_IN);
 
   // wait for sensor response
   for (timeout = 0; timeout < 1000000 && gpioRead(pin) == GPIO_LOW; ++timeout);
