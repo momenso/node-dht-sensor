@@ -1,19 +1,25 @@
-# node-dht-sensor
+# node-dht-sensor-rp5
 
 A simple node.js module for reading temperature and relative humidity using a compatible DHT sensor.
 
-![](https://github.com/momenso/node-dht-sensor/workflows/Node.js%20CI/badge.svg)
-[![npm](https://img.shields.io/npm/v/node-dht-sensor.svg?label=npm%20package)](https://www.npmjs.com/package/node-dht-sensor)
-[![npm](https://img.shields.io/npm/dm/node-dht-sensor.svg)](https://www.npmjs.com/package/node-dht-sensor)
-[![LICENSE](https://img.shields.io/github/license/momenso/node-dht-sensor.svg)](https://github.com/momenso/node-dht-sensor/blob/master/LICENSE)
+[![npm](https://img.shields.io/npm/v/node-dht-sensor-rp5.svg?label=npm%20package)](https://www.npmjs.com/package/node-dht-sensor-rp5)
+[![npm](https://img.shields.io/npm/dm/node-dht-sensor-rp5.svg)](https://www.npmjs.com/package/node-dht-sensor)
+[![LICENSE](https://img.shields.io/github/license/kshetline/node-dht-sensor-rp5.svg)](https://github.com/kshetline/node-dht-sensor-rp5/blob/master/LICENSE)
+
+> Please note that this library is a spin-off of David Momenso's **node-dht-sensor**, designed to deal with the new GPIO issues which have come along with the advent of the Raspberry Pi 5.
 
 ## Installation
 
 ```shell session
-$ npm install node-dht-sensor
+$ npm install node-dht-sensor-rp5 --use_libgpiod=true
 ```
 
-Please note that differently from versions 0.0.x there's no need to pre-install the BCM2835 library [2].
+Although this fork of **node-dht-sensor** exists for the purpose of supporting the Raspberry Pi 5 (and presumably future versions of the Pi using the same new architecture), the dependency on libgpiod can be avoided by omitting the
+`‑‑use_libgpiod=true` parameter, resulting in a installation still capable of working on the Raspberry Pi 4 and earlier without the extra dependency.
+
+```shell session
+$ npm install node-dht-sensor-rp5
+```
 
 ## Usage
 

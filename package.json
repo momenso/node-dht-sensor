@@ -1,10 +1,13 @@
 {
   "author": "David Momenso",
-  "name": "node-dht-sensor",
-  "description": "Reads data from DHT sensors on Raspberry Pi",
-  "version": "0.5.0",
+  "contributors": [
+    "Kerry Shetline"
+  ],
+  "name": "node-dht-sensor-rp5",
+  "description": "Reads data from DHT sensors on Raspberry Pi, forked to support Raspberry Pi 5",
+  "version": "0.0.0-alpha",
   "repository": {
-    "url": "https://github.com/momenso/node-dht-sensor"
+    "url": "https://github.com/kshetline/node-dht-sensor-rp5"
   },
   "scripts": {
     "install": "node-gyp configure",
@@ -43,6 +46,9 @@
     "humidity",
     "raspberry",
     "raspberry pi",
-    "rpi"
+    "raspberry pi 5",
+    "rpi",
+    "libgpiod",
+    "gpiod"
   ]
 }
