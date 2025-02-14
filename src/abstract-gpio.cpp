@@ -3,18 +3,24 @@
 #include <algorithm>
 #include "bcm2835/bcm2835.h"
 #include <fstream>
-#include <gpiod.h>
 #include <regex>
 #include <stdio.h>
 #include <string>
 
+#ifdef USE_LIBGPIOD
+#include <gpiod.h>
+#endif
+
 static bool useGpiod = false;
+static GpioDirection lastDirection[MAX_GPIO_PIN_NUMBER + 1];
+#ifdef USE_LIBGPIOD
 static gpiod_chip *theChip = NULL;
 static gpiod_line *lines[MAX_GPIO_PIN_NUMBER + 1];
-static GpioDirection lastDirection[MAX_GPIO_PIN_NUMBER + 1];
+#endif
 
 static void gpiodCleanUp()
 {
+  #ifdef USE_LIBGPIOD
   for (int i = 1; i <= MAX_GPIO_PIN_NUMBER; ++i)
   {
     if (lines[i] != NULL)
@@ -24,6 +30,7 @@ static void gpiodCleanUp()
   }
 
   gpiod_chip_close(theChip);
+  #endif
 }
 
 bool gpioInitialize()
@@ -41,7 +48,9 @@ bool gpioInitialize()
     {
       if (std::regex_search(line, match, pattern) && std::stoi(match[1]) > 4)
       {
+        #ifdef USE_LIBGPIOD
         isPi5 = true;
+        #endif
         break;
       }
     }
@@ -51,6 +60,7 @@ bool gpioInitialize()
 
   if (isPi5)
   {
+    #ifdef USE_LIBGPIOD
     theChip = gpiod_chip_open_by_name("gpiochip0");
 
     if (theChip == NULL)
@@ -71,6 +81,7 @@ bool gpioInitialize()
       std::atexit(gpiodCleanUp);
       return true;
     }
+    #endif
   }
   else if (!bcm2835_init())
   {
@@ -88,6 +99,7 @@ bool gpioInitialize()
   }
 }
 
+#ifdef USE_LIBGPIOD
 static gpiod_line* getLine(int pin, GpioDirection direction)
 {
   if (lines[pin] == NULL || lastDirection[pin] != direction)
@@ -119,12 +131,15 @@ static gpiod_line* getLine(int pin, GpioDirection direction)
 
   return line;
 }
+#endif
 
 void gpioWrite(int pin, GpioPinState state)
 {
   if (useGpiod)
   {
+    #ifdef USE_LIBGPIOD
     gpiod_line_set_value(getLine(pin, GPIO_OUT), state == GPIO_LOW ? 0 : 1);
+    #endif
   }
   else
   {
@@ -142,7 +157,9 @@ GpioPinState gpioRead(int pin)
 {
   if (useGpiod)
   {
+    #ifdef USE_LIBGPIOD
     return gpiod_line_get_value(getLine(pin, GPIO_IN)) == 0 ? GPIO_LOW : GPIO_HIGH;
+    #endif
   }
   else
   {

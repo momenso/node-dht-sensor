@@ -2,7 +2,8 @@
   "targets": [
     {
       "variables": {
-        "dht_verbose%": "false"
+        "dht_verbose%": "false",
+        "use_libgpiod%" : "false"
       },
       "target_name": "node_dht_sensor",
       "sources": [
@@ -18,13 +19,16 @@
       "dependencies": [
         "<!(node -p \"require('node-addon-api').gyp\")"
       ],
-      'libraries': [
-        '-lgpiod'
-      ],
       "defines": [ 'NAPI_DISABLE_CPP_EXCEPTIONS' ],
       "conditions": [
         ["dht_verbose=='true'", {
           "defines": [ "VERBOSE" ]
+        }],
+        ["use_libgpiod=='true'", {
+          "defines": [ "USE_LIBGPIOD" ],
+          'libraries': [
+            '-lgpiod'
+          ]
         }]
       ]
     }
