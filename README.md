@@ -3,7 +3,7 @@
 A simple node.js module for reading temperature and relative humidity using a compatible DHT sensor.
 
 [![npm](https://img.shields.io/npm/v/node-dht-sensor-rp5.svg?label=npm%20package)](https://www.npmjs.com/package/node-dht-sensor-rp5)
-[![npm](https://img.shields.io/npm/dm/node-dht-sensor-rp5.svg)](https://www.npmjs.com/package/node-dht-sensor)
+[![npm](https://img.shields.io/npm/dm/node-dht-sensor-rp5.svg)](https://www.npmjs.com/package/node-dht-sensor-rp5)
 [![LICENSE](https://img.shields.io/github/license/kshetline/node-dht-sensor-rp5.svg)](https://github.com/kshetline/node-dht-sensor-rp5/blob/master/LICENSE)
 
 > Please note that this library is a spin-off of David Momenso's **node-dht-sensor**, designed to deal with the new GPIO issues which have come along with the advent of the Raspberry Pi 5.
@@ -41,7 +41,7 @@ If the initialization succeeds when you can call the read function to obtain the
 This sample queries a DHT11 sensor connected to the GPIO 4 and prints out the result on the console.
 
 ```javascript
-var sensor = require("node-dht-sensor");
+var sensor = require("node-dht-sensor-rp5");
 
 sensor.read(11, 4, function(err, temperature, humidity) {
   if (!err) {
@@ -60,7 +60,7 @@ The following example shows a method for querying multiple sensors connected to 
 2. High-resolution DHT22 sensor connected to GPIO 4
 
 ```javascript
-var sensorLib = require("node-dht-sensor");
+var sensorLib = require("node-dht-sensor-rp5");
 
 var app = {
   sensors: [
@@ -98,10 +98,10 @@ app.read();
 
 ### Promises API
 
-Promises API provides an alternative `read` method that returns a Promise object rather than using a callback. The API is accessible via `require('node-dht-sensor').promises`.
+Promises API provides an alternative `read` method that returns a Promise object rather than using a callback. The API is accessible via `require('node-dht-sensor-rp5').promises`.
 
 ```javascript
-var sensor = require("node-dht-sensor").promises;
+var sensor = require("node-dht-sensor-rp5").promises;
 
 // You can use `initialize` and `setMaxTries` just like before
 sensor.setMaxRetries(10);
@@ -126,7 +126,7 @@ sensor.read(22, 17).then(
 Using `async/await`:
 
 ```javascript
-const sensor = require("node-dht-sensor").promises;
+const sensor = require("node-dht-sensor-rp5").promises;
 
 async function exec() {
   try {
@@ -211,7 +211,7 @@ Standard node-gyp commands are used to build the module. So, just make sure you 
 Verbose output from the module can be enabled by by specifying the `--dht_verbose=true` flag when installing the node via npm.
 
 ```shell session
-$ npm install node-dht-sensor --dht_verbose=true
+$ npm install node-dht-sensor-rp5 --use_libgpiod --dht_verbose=true
 ```
 
 if you are interested in enabling trace when building directly from source you can enable the `-Ddht_verbose` flag when running node-gyp configure.

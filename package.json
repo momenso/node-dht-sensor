@@ -5,7 +5,7 @@
   ],
   "name": "node-dht-sensor-rp5",
   "description": "Reads data from DHT sensors on Raspberry Pi, forked to support Raspberry Pi 5",
-  "version": "0.0.0-alpha",
+  "version": "0.0.0",
   "repository": {
     "url": "https://github.com/kshetline/node-dht-sensor-rp5"
   },
