@@ -13,13 +13,24 @@ A simple node.js module for reading temperature and relative humidity using a co
 $ npm install node-dht-sensor
 ```
 
-For use with the Raspberry Pi 5, creating dependency on libgpiod, installation is as follows:
+### Installing on Raspberry Pi 5 (libgpiod requirement)
 
-```shell session
-$ npm install node-dht-sensor --use_libgpiod=true
+When running node-dht-sensor on a Raspberry Pi 5 (or newer), you must install libgpiod (and its development headers) before you build. If you try to install the module with --use_libgpiod=true without having libgpiod-dev installed, the build will fail.
+
+For Raspberry Pi OS (Debian-based), use:
+
+```sh
+sudo apt-get update
+sudo apt-get install -y libgpiod-dev
 ```
 
-The above accounts for the architectural changes in the Raspberry Pi 5 which are incompatible with the BCM2835 library.
+After installing libgpiod-dev, build node-dht-sensor with:
+
+```sh
+npm install node-dht-sensor --use_libgpiod=true
+```
+
+> Note: Specifying --use_libgpiod=true compiles and links against libgpiod for GPIO access, because the BCM2835 library does not work on Raspberry Pi 5’s architecture. If you omit --use_libgpiod=true, node-dht-sensor defaults to using BCM2835, which is compatible with older Raspberry Pi models.
 
 ## Usage
 
@@ -208,7 +219,7 @@ Standard node-gyp commands are used to build the module. So, just make sure you 
 
 ### Tracing and Debugging
 
-Verbose output from the module can be enabled by by specifying the `--dht_verbose=true` flag when installing the node via npm.
+Verbose output from the module can be enabled by specifying the `--dht_verbose=true` flag when installing the node via npm.
 
 ```shell session
 $ npm install node-dht-sensor --dht_verbose=true
@@ -222,7 +233,7 @@ $ node-gyp configure -- -Ddht_verbose=true
 
 ### Appendix A: Quick Node.js installation guide
 
-There are many ways you can get Node.js installed on your Raspberry Pi. Here is just one of way you can do it.
+There are many ways you can get Node.js installed on your Raspberry Pi. Here is just one way you can do it.
 
 ```shell session
 $ wget https://nodejs.org/dist/v14.15.4/node-v14.15.4-linux-armv7l.tar.xz
