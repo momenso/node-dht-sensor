@@ -13,7 +13,13 @@ A simple node.js module for reading temperature and relative humidity using a co
 $ npm install node-dht-sensor
 ```
 
-Please note that differently from versions 0.0.x there's no need to pre-install the BCM2835 library [2].
+For use with the Raspberry Pi 5, creating dependency on libgpiod, installation is as follows:
+
+```shell session
+$ npm install node-dht-sensor --use_libgpiod=true
+```
+
+The above accounts for the architectural changes in the Raspberry Pi 5 which are incompatible with the BCM2835 library.
 
 ## Usage
 

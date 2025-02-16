@@ -1,11 +1,9 @@
 #include <stdio.h>
 #include <string.h>
 #include <sys/time.h>
-#include "bcm2835/bcm2835.h"
+#include "abstract-gpio.h"
 #include <unistd.h>
 
-#define BCM2708_PERI_BASE   0x20000000
-#define GPIO_BASE           (BCM2708_PERI_BASE + 0x200000)
 #define MAXTIMINGS          100
 #define DHT11               11
 #define DHT22               22
@@ -62,16 +60,14 @@ long readDHT(int type, int pin, float &temperature, float &humidity)
   }
 
   // request sensor data
-  bcm2835_gpio_fsel(pin, BCM2835_GPIO_FSEL_OUTP);
-  bcm2835_gpio_write(pin, HIGH);
+  gpioWrite(pin, GPIO_HIGH);
   usleep(10000);
-  bcm2835_gpio_write(pin, LOW);
+  gpioWrite(pin, GPIO_LOW);
   usleep(type == 11 ? 18000 : 2500);
-  bcm2835_gpio_write(pin, HIGH);
-  bcm2835_gpio_fsel(pin, BCM2835_GPIO_FSEL_INPT);
+  gpioWrite(pin, GPIO_HIGH);
 
   // wait for sensor response
-  for (timeout = 0; timeout < 1000000 && bcm2835_gpio_lev(pin) == LOW; ++timeout);
+  for (timeout = 0; timeout < 1000000 && gpioRead(pin) == GPIO_LOW; ++timeout);
   if (timeout >= 100000)
   {
     #ifdef VERBOSE
@@ -85,7 +81,7 @@ long readDHT(int type, int pin, float &temperature, float &humidity)
     return -3;
   }
 
-  for (timeout = 0; timeout < 1000000 && bcm2835_gpio_lev(pin) == HIGH; ++timeout);
+  for (timeout = 0; timeout < 1000000 && gpioRead(pin) == GPIO_HIGH; ++timeout);
   if (timeout >= 100000)
   {
     #ifdef VERBOSE
@@ -102,8 +98,8 @@ long readDHT(int type, int pin, float &temperature, float &humidity)
   // read data
   for (bitCount = 0; bitCount < MAXTIMINGS; ++bitCount)
   {
-    for (timeout = 0; bcm2835_gpio_lev(pin) == LOW && timeout < 50000; ++timeout);
-    for (timeout = 0; bcm2835_gpio_lev(pin) == HIGH && timeout < 50000; ++timeout);
+    for (timeout = 0; gpioRead(pin) == GPIO_LOW && timeout < 50000; ++timeout);
+    for (timeout = 0; gpioRead(pin) == GPIO_HIGH && timeout < 50000; ++timeout);
     bits[bitCount] = timeout;
     if (timeout >= 50000) break;
   }
@@ -241,22 +237,14 @@ long readDHT(int type, int pin, float &temperature, float &humidity)
 
 int initialize()
 {
-  if (!bcm2835_init())
+  if (gpioInitialize())
   {
-    #ifdef VERBOSE
-    puts("BCM2835 initialization failed.");
-    #endif
-    return 1;
+    initialized = 1;
+    memset(last_read, 0, sizeof(unsigned long long)*32);
+    memset(last_temperature, 0, sizeof(float)*32);
+    memset(last_humidity, 0, sizeof(float)*32);
+    return 0;
   }
-  else
-  {
-    #ifdef VERBOSE
-    puts("BCM2835 initialized.");
-      #endif
-      initialized = 1;
-      memset(last_read, 0, sizeof(unsigned long long)*32);
-      memset(last_temperature, 0, sizeof(float)*32);
-      memset(last_humidity, 0, sizeof(float)*32);
-      return 0;
-  }
+
+  return 1;
 }

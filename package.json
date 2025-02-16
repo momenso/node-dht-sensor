@@ -1,5 +1,8 @@
 {
   "author": "David Momenso",
+  "contributors": [
+    "Kerry Shetline"
+  ],
   "name": "node-dht-sensor",
   "description": "Reads data from DHT sensors on Raspberry Pi",
   "version": "0.4.4",
@@ -43,6 +46,9 @@
     "humidity",
     "raspberry",
     "raspberry pi",
-    "rpi"
+    "raspberry pi 5",
+    "rpi",
+    "libgpiod",
+    "gpiod"
   ]
 }
