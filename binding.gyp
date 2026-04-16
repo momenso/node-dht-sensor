@@ -3,7 +3,8 @@
     {
       "variables": {
         "dht_verbose%": "false",
-        "use_libgpiod%" : "false"
+        "use_libgpiod%" : "false",
+        "libgpiod_version%": "<!(node -p \"try { require('child_process').execSync('pkg-config --modversion libgpiod').toString().trim().split('.')[0] >= 2 ? 'GPIOD_V2' : 'GPIOD_V1' } catch(e) { 'GPIOD_V1' }\")"
       },
       "target_name": "node_dht_sensor",
       "sources": [
@@ -11,7 +12,7 @@
         "src/node-dht-sensor.cpp",
         "src/dht-sensor.cpp",
         "src/util.cpp",
-        "src/abstract-gpio.cpp",
+        "src/abstract-gpio.cpp"
       ],
       "include_dirs": [
         "<!@(node -p \"require('node-addon-api').include\")"
@@ -25,9 +26,12 @@
           "defines": [ "VERBOSE" ]
         }],
         ["use_libgpiod=='true'", {
-          "defines": [ "USE_LIBGPIOD" ],
-          'libraries': [
-            '-lgpiod'
+          "defines": [ 
+            "USE_LIBGPIOD",
+            "<(libgpiod_version)"
+          ],
+          "libraries": [
+            "-lgpiod"
           ]
         }]
       ]
