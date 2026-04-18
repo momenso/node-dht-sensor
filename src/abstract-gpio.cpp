@@ -8,6 +8,7 @@
 #include <string>
 
 #ifdef USE_LIBGPIOD
+#include <cstring>
 #include <gpiod.h>
 #endif
 
@@ -49,6 +50,59 @@ static void gpiodCleanUp()
   #endif
 }
 
+#ifdef USE_LIBGPIOD
+static gpiod_chip* findPi5GpioChip()
+{
+  gpiod_chip* chip = NULL;
+
+  // 1. Safely enumerate up to 10 chips looking for the RP1 southbridge
+  for (int i = 0; i < 10; i++)
+  {
+    char path[32];
+    snprintf(path, sizeof(path), "/dev/gpiochip%d", i);
+
+    #ifdef GPIOD_V2
+    chip = gpiod_chip_open(path);
+    if (chip != NULL)
+    {
+      gpiod_chip_info* info = gpiod_chip_get_info(chip);
+      if (info != NULL)
+      {
+        const char* label = gpiod_chip_info_get_label(info);
+        bool is_rp1 = (label != NULL && strstr(label, "pinctrl-rp1") != NULL);
+        gpiod_chip_info_free(info);
+
+        if (is_rp1) return chip;
+      }
+      gpiod_chip_close(chip);
+    }
+    #else
+    chip = gpiod_chip_open(path);
+    if (chip != NULL)
+    {
+      const char* label = gpiod_chip_label(chip);
+      if (label != NULL && strstr(label, "pinctrl-rp1") != NULL)
+      {
+        return chip;
+      }
+      gpiod_chip_close(chip);
+    }
+    #endif
+  }
+
+  // 2. Fallback if the RP1 label changes in future kernels
+  #ifdef GPIOD_V2
+  chip = gpiod_chip_open("/dev/gpiochip4");
+  if (chip == NULL) chip = gpiod_chip_open("/dev/gpiochip0");
+  #else
+  chip = gpiod_chip_open_by_name("gpiochip4");
+  if (chip == NULL) chip = gpiod_chip_open_by_name("gpiochip0");
+  #endif
+
+  return chip;
+}
+#endif
+
 bool gpioInitialize()
 {
   bool isPi5 = false;
@@ -77,21 +131,12 @@ bool gpioInitialize()
   {
     #ifdef USE_LIBGPIOD
 
-    #ifdef GPIOD_V2
-    // libgpiod v2 requires paths instead of names.
-    // On the Pi 5, the main header is typically on gpiochip4 (RP1 southbridge)
-    theChip = gpiod_chip_open("/dev/gpiochip4");
-    if (theChip == NULL) {
-      theChip = gpiod_chip_open("/dev/gpiochip0");
-    }
-    #else
-    theChip = gpiod_chip_open_by_name("gpiochip0");
-    #endif
+    theChip = findPi5GpioChip();
 
     if (theChip == NULL)
     {
       #ifdef VERBOSE
-      puts("libgpiod initialization failed.");
+      puts("libgpiod initialization failed: Could not find RP1 or fallback chips.");
       #endif
       return false;
     }
