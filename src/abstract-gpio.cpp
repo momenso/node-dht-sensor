@@ -1,7 +1,6 @@
 #include "abstract-gpio.h"
 
 #include <algorithm>
-#include "bcm2835/bcm2835.h"
 #include <fstream>
 #include <regex>
 #include <stdio.h>
@@ -10,24 +9,22 @@
 #ifdef USE_LIBGPIOD
 #include <cstring>
 #include <gpiod.h>
+#else
+#include "bcm2835/bcm2835.h"
 #endif
-
-static bool useGpiod = false;
-static GpioDirection lastDirection[MAX_GPIO_PIN_NUMBER + 1];
 
 #ifdef USE_LIBGPIOD
 static gpiod_chip *theChip = NULL;
+static GpioDirection lastDirection[MAX_GPIO_PIN_NUMBER + 1];
 
 #ifdef GPIOD_V2
 static gpiod_line_request *requests[MAX_GPIO_PIN_NUMBER + 1];
 #else
 static gpiod_line *lines[MAX_GPIO_PIN_NUMBER + 1];
 #endif
-#endif
 
 static void gpiodCleanUp()
 {
-  #ifdef USE_LIBGPIOD
   for (int i = 1; i <= MAX_GPIO_PIN_NUMBER; ++i)
   {
     #ifdef GPIOD_V2
@@ -47,15 +44,13 @@ static void gpiodCleanUp()
   {
     gpiod_chip_close(theChip);
   }
-  #endif
 }
 
-#ifdef USE_LIBGPIOD
-static gpiod_chip* findPi5GpioChip()
+static gpiod_chip* findGpioChip()
 {
   gpiod_chip* chip = NULL;
 
-  // 1. Safely enumerate up to 10 chips looking for the RP1 southbridge
+  // 1. Safely enumerate up to 10 chips looking for the RP1 southbridge (Pi 5)
   for (int i = 0; i < 10; i++)
   {
     char path[32];
@@ -90,7 +85,7 @@ static gpiod_chip* findPi5GpioChip()
     #endif
   }
 
-  // 2. Fallback if the RP1 label changes in future kernels
+  // 2. Fallback for older Pi's using libgpiod or default setups
   #ifdef GPIOD_V2
   chip = gpiod_chip_open("/dev/gpiochip4");
   if (chip == NULL) chip = gpiod_chip_open("/dev/gpiochip0");
@@ -101,81 +96,6 @@ static gpiod_chip* findPi5GpioChip()
 
   return chip;
 }
-#endif
-
-bool gpioInitialize()
-{
-  bool isPi5 = false;
-  std::ifstream file("/proc/cpuinfo");
-  std::string line;
-
-  if (file.is_open())
-  {
-    std::regex pattern(R"(Model\s+:\s+Raspberry Pi (\d+))");
-    std::smatch match;
-
-    while (std::getline(file, line))
-    {
-      if (std::regex_search(line, match, pattern) && std::stoi(match[1]) > 4)
-      {
-        #ifdef USE_LIBGPIOD
-        isPi5 = true;
-        #endif
-        break;
-      }
-    }
-    file.close();
-  }
-
-  if (isPi5)
-  {
-    #ifdef USE_LIBGPIOD
-
-    theChip = findPi5GpioChip();
-
-    if (theChip == NULL)
-    {
-      #ifdef VERBOSE
-      puts("libgpiod initialization failed: Could not find RP1 or fallback chips.");
-      #endif
-      return false;
-    }
-    else
-    {
-      #ifdef VERBOSE
-      puts("libgpiod initialized.");
-      #endif
-
-      #ifdef GPIOD_V2
-      std::fill(requests, requests + MAX_GPIO_PIN_NUMBER + 1, (gpiod_line_request*) NULL);
-      #else
-      std::fill(lines, lines + MAX_GPIO_PIN_NUMBER + 1, (gpiod_line*) NULL);
-      #endif
-
-      std::fill(lastDirection, lastDirection + MAX_GPIO_PIN_NUMBER + 1, GPIO_UNSET);
-      useGpiod = true;
-      std::atexit(gpiodCleanUp);
-      return true;
-    }
-    #endif
-  }
-  else if (!bcm2835_init())
-  {
-    #ifdef VERBOSE
-    puts("BCM2835 initialization failed.");
-    #endif
-    return false;
-  }
-  else
-  {
-    #ifdef VERBOSE
-    puts("BCM2835 initialized.");
-    #endif
-    return true;
-  }
-}
-
-#ifdef USE_LIBGPIOD
 
 #ifdef GPIOD_V2
 static gpiod_line_request* getLineRequest(int pin)
@@ -211,7 +131,6 @@ static gpiod_line_request* getLineRequest(int pin)
 #else
 static gpiod_line* getLine(int pin, GpioDirection direction)
 {
-  // For libgpiod < 1.5 compatibility, release and re-request to change direction
   if (lines[pin] != NULL && lastDirection[pin] != direction)
   {
     gpiod_line_release(lines[pin]);
@@ -229,93 +148,127 @@ static gpiod_line* getLine(int pin, GpioDirection direction)
   }
   return lines[pin];
 }
-#endif
+#endif // GPIOD_V2
 
+// --- bcm2835 State ---
+#else
+static GpioDirection lastDirection[MAX_GPIO_PIN_NUMBER + 1];
 #endif // USE_LIBGPIOD
 
-void gpioWrite(int pin, GpioPinState state)
+// --- Public API ---
+
+bool gpioInitialize()
 {
-  if (useGpiod)
+#ifdef USE_LIBGPIOD
+  theChip = findGpioChip();
+
+  if (theChip == NULL)
   {
-    #ifdef USE_LIBGPIOD
-    #ifdef GPIOD_V2
-    gpiod_line_request *req = getLineRequest(pin);
-    if (req != NULL)
-    {
-      gpiod_line_request_set_value(req, pin, state == GPIO_LOW ? GPIOD_LINE_VALUE_INACTIVE : GPIOD_LINE_VALUE_ACTIVE);
-      lastDirection[pin] = GPIO_OUT;
-    }
-    #else
-    gpiod_line *line = getLine(pin, GPIO_OUT);
-    if (line != NULL)
-    {
-      gpiod_line_set_value(line, state == GPIO_LOW ? 0 : 1);
-    }
+    #ifdef VERBOSE
+    puts("libgpiod initialization failed: Could not find RP1 or fallback chips.");
     #endif
-    #endif
+    return false;
   }
   else
   {
-    if (lastDirection[pin] != GPIO_OUT)
-    {
-      bcm2835_gpio_fsel(pin, BCM2835_GPIO_FSEL_OUTP);
-      lastDirection[pin] = GPIO_OUT;
-    }
-    bcm2835_gpio_write(pin, state == GPIO_LOW ? LOW : HIGH);
+    #ifdef VERBOSE
+    puts("libgpiod initialized.");
+    #endif
+
+    #ifdef GPIOD_V2
+    std::fill(requests, requests + MAX_GPIO_PIN_NUMBER + 1, (gpiod_line_request*) NULL);
+    #else
+    std::fill(lines, lines + MAX_GPIO_PIN_NUMBER + 1, (gpiod_line*) NULL);
+    #endif
+
+    std::fill(lastDirection, lastDirection + MAX_GPIO_PIN_NUMBER + 1, GPIO_UNSET);
+    std::atexit(gpiodCleanUp);
+    return true;
   }
+#else
+  if (!bcm2835_init())
+  {
+    #ifdef VERBOSE
+    puts("BCM2835 initialization failed.");
+    #endif
+    return false;
+  }
+  else
+  {
+    #ifdef VERBOSE
+    puts("BCM2835 initialized.");
+    #endif
+    std::fill(lastDirection, lastDirection + MAX_GPIO_PIN_NUMBER + 1, GPIO_UNSET);
+    return true;
+  }
+#endif
+}
+
+void gpioWrite(int pin, GpioPinState state)
+{
+#ifdef USE_LIBGPIOD
+  #ifdef GPIOD_V2
+  gpiod_line_request *req = getLineRequest(pin);
+  if (req != NULL) 
+  {
+    gpiod_line_request_set_value(req, pin, state == GPIO_LOW ? GPIOD_LINE_VALUE_INACTIVE : GPIOD_LINE_VALUE_ACTIVE);
+    lastDirection[pin] = GPIO_OUT;
+  }
+  #else
+  gpiod_line *line = getLine(pin, GPIO_OUT);
+  if (line != NULL) 
+  {
+    gpiod_line_set_value(line, state == GPIO_LOW ? 0 : 1);
+  }
+  #endif
+#else
+  if (lastDirection[pin] != GPIO_OUT)
+  {
+    bcm2835_gpio_fsel(pin, BCM2835_GPIO_FSEL_OUTP);
+    lastDirection[pin] = GPIO_OUT;
+  }
+  bcm2835_gpio_write(pin, state == GPIO_LOW ? LOW : HIGH);
+#endif
 }
 
 GpioPinState gpioRead(int pin)
 {
-  if (useGpiod)
+#ifdef USE_LIBGPIOD
+  #ifdef GPIOD_V2
+  gpiod_line_request *req = getLineRequest(pin);
+  if (req == NULL) return GPIO_HIGH;
+
+  if (lastDirection[pin] == GPIO_OUT)
   {
-    #ifdef USE_LIBGPIOD
-    #ifdef GPIOD_V2
-    gpiod_line_request *req = getLineRequest(pin);
-    if (req == NULL)
-    {
-      return GPIO_HIGH; // Failsafe on hardware lock
-    }
-
-    if (lastDirection[pin] == GPIO_OUT)
-    {
-      gpiod_line_request_set_value(req, pin, GPIOD_LINE_VALUE_ACTIVE);
-      lastDirection[pin] = GPIO_IN;
-    }
-
-    int val = gpiod_line_request_get_value(req, pin);
-
-    // Explicitly handle read error (-1) by returning idle line state
-    if (val == -1)
-    {
-      return GPIO_HIGH;
-    }
-    return val == GPIOD_LINE_VALUE_INACTIVE ? GPIO_LOW : GPIO_HIGH;
-
-    #else
-    gpiod_line *line = getLine(pin, GPIO_IN);
-    if (line == NULL)
-    {
-      return GPIO_HIGH; // Failsafe
-    }
-
-    int val = gpiod_line_get_value(line);
-    if (val == -1)
-    {
-      return GPIO_HIGH;
-    }
-    return val == 0 ? GPIO_LOW : GPIO_HIGH;
-
-    #endif
-    #endif
+    gpiod_line_request_set_value(req, pin, GPIOD_LINE_VALUE_ACTIVE);
+    lastDirection[pin] = GPIO_IN;
   }
-  else
+
+  int val = gpiod_line_request_get_value(req, pin);
+
+  if (val == -1)
   {
-    if (lastDirection[pin] != GPIO_IN)
-    {
-      bcm2835_gpio_fsel(pin, BCM2835_GPIO_FSEL_INPT);
-      lastDirection[pin] = GPIO_IN;
-    }
-    return bcm2835_gpio_lev(pin) == LOW ? GPIO_LOW : GPIO_HIGH;
+    return GPIO_HIGH;
   }
+  return val == GPIOD_LINE_VALUE_INACTIVE ? GPIO_LOW : GPIO_HIGH;
+
+  #else
+  gpiod_line *line = getLine(pin, GPIO_IN);
+  if (line == NULL) return GPIO_HIGH;
+
+  int val = gpiod_line_get_value(line);
+  if (val == -1)
+  {
+    return GPIO_HIGH;
+  }
+  return val == 0 ? GPIO_LOW : GPIO_HIGH;
+  #endif
+#else
+  if (lastDirection[pin] != GPIO_IN)
+  {
+    bcm2835_gpio_fsel(pin, BCM2835_GPIO_FSEL_INPT);
+    lastDirection[pin] = GPIO_IN;
+  }
+  return bcm2835_gpio_lev(pin) == LOW ? GPIO_LOW : GPIO_HIGH;
+#endif
 }
