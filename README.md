@@ -7,30 +7,38 @@ A simple node.js module for reading temperature and relative humidity using a co
 [![npm](https://img.shields.io/npm/dm/node-dht-sensor.svg)](https://www.npmjs.com/package/node-dht-sensor)
 [![LICENSE](https://img.shields.io/github/license/momenso/node-dht-sensor.svg)](https://github.com/momenso/node-dht-sensor/blob/master/LICENSE)
 
-## Installation
+## Installation & Hardware Requirements
 
-```shell session
-$ npm install node-dht-sensor
+For most standard Linux systems and older Raspberry Pi models (Pi 1 through 4), you can install the module directly via npm:
+
+```sh
+npm install node-dht-sensor
 ```
 
-### Installing on Raspberry Pi 5 (libgpiod requirement)
+### Modern Raspberry Pi (Pi 5 / Debian 12+) — libgpiod
 
-When running node-dht-sensor on a Raspberry Pi 5 (or newer), you must install libgpiod (and its development headers) before you build. If you try to install the module with --use_libgpiod=true without having libgpiod-dev installed, the build will fail.
+When running `node-dht-sensor` on a modern architecture like the Raspberry Pi 5, the legacy BCM2835 library is physically incompatible with the new RP1 southbridge chip. You **must** compile the module using `libgpiod`.
 
-For Raspberry Pi OS (Debian-based), use:
+**`libgpiod` v2 is the highly preferred library.** The v2 API allows this module to use an `OPEN_DRAIN` configuration, enabling fast, user-space polling of the sensor.
+
+Before installing the module, you must install the `libgpiod` development headers and `pkg-config`. Our build system uses `pkg-config` to auto-detect whether your OS provides `libgpiod` v1 or v2 at build time and compiles the correct C++ code paths automatically.
+
+For Debian-based systems (like Raspberry Pi OS):
 
 ```sh
 sudo apt-get update
-sudo apt-get install -y libgpiod-dev
+sudo apt-get install -y libgpiod-dev pkg-config
 ```
 
-After installing libgpiod-dev, build node-dht-sensor with:
+Then, explicitly tell npm to use the libgpiod API during installation:
 
 ```sh
 npm install node-dht-sensor --use_libgpiod=true
 ```
 
-> Note: Specifying --use_libgpiod=true compiles and links against libgpiod for GPIO access, because the BCM2835 library does not work on Raspberry Pi 5’s architecture. If you omit --use_libgpiod=true, node-dht-sensor defaults to using BCM2835, which is compatible with older Raspberry Pi models.
+### Older Raspberry Pi (Pi 1 through Pi 4) — BCM2835
+
+If you omit the `--use_libgpiod=true` flag, `node-dht-sensor` defaults to using the direct-memory BCM2835 library. This bypasses the Linux kernel entirely for nanosecond-level read speeds and is highly recommended for older boards where the CPU manages the GPIO pins directly.
 
 ## Usage
 
@@ -186,72 +194,63 @@ sensor.read(22, 4, function(err, temperature, humidity) {
 
 And the result will always be the configured readout value defined at initialization.
 
-```shell session
-$ node examples/fake-test.js
+```sh
+node examples/fake-test.js
 temp: 21.0°C, humidity: 60.0%
-$ node examples/fake-test.js
+node examples/fake-test.js
 temp: 21.0°C, humidity: 60.0%
 ```
 
 You can find a complete source code example in [examples/fake-test.js](https://github.com/momenso/node-dht-sensor/blob/master/examples/fake-test.js).
 
-### Reference for building from source
+## Manual Compilation & Debugging
 
-Standard node-gyp commands are used to build the module. So, just make sure you have node and node-gyp as well as the Broadcom library to build the project.
+Standard node-gyp commands are used to build the module. So, just make sure you have `node` and `node-gyp`, and the appropriate C++ libraries (`bcm2835` or `libgpiod-dev`) to build the project.
 
-1. In case, you don't have node-gyp, install it first:
+1. In case you don't have node-gyp, install it first:
 
-   ```shell session
-   $ sudo npm install -g node-gyp
-   $ sudo update-alternatives --install /usr/bin/node-gyp node-gyp /opt/node-v10.15.3-linux-armv7l/bin/node-gyp 1
+   ```sh
+   sudo npm install -g node-gyp
    ```
 
-2. Generate the configuration files
+2. To configure and build the component manually with libgpiod auto-detection enabled:
 
-   ```shell session
-   $ node-gyp configure
+   ```sh
+   node-gyp configure --use_libgpiod=true
+   node-gyp build
    ```
 
-3. Build the component
-   ```shell session
-   $ node-gyp build
-   ```
-
-### Tracing and Debugging
+## Tracing and Debugging
 
 Verbose output from the module can be enabled by specifying the `--dht_verbose=true` flag when installing the node via npm.
 
-```shell session
-$ npm install node-dht-sensor --dht_verbose=true
+```sh
+npm install node-dht-sensor --dht_verbose=true
 ```
 
-if you are interested in enabling trace when building directly from source you can enable the `-Ddht_verbose` flag when running node-gyp configure.
+If you are interested in enabling trace when building directly from source you can enable the `-Ddht_verbose` flag when running node-gyp configure.
 
-```shell session
-$ node-gyp configure -- -Ddht_verbose=true
+```sh
+node-gyp configure -- -Ddht_verbose=true
 ```
 
-### Appendix A: Quick Node.js installation guide
+## Appendix A: Quick Node.js installation guide
 
-There are many ways you can get Node.js installed on your Raspberry Pi. Here is just one way you can do it.
+There are many ways you can get Node.js installed on your Raspberry Pi. For modern installations (including Raspberry Pi 5), the officially recommended approach is using the NodeSource package repository.
 
-```shell session
-$ wget https://nodejs.org/dist/v14.15.4/node-v14.15.4-linux-armv7l.tar.xz
-$ tar xvfJ node-v14.15.4-linux-armv7l.tar.xz
-$ sudo mv node-v14.15.4-linux-armv7l /opt
-$ sudo update-alternatives --install /usr/bin/node node /opt/node-v14.15.4-linux-armv7l/bin/node 1
-$ sudo update-alternatives --set node /opt/node-v14.15.4-linux-armv7l/bin/node
-$ sudo update-alternatives --install /usr/bin/npm npm /opt/node-v14.15.4-linux-armv7l/bin/npm 1
+```sh
+curl -fsSL [https://deb.nodesource.com/setup_20.x](https://deb.nodesource.com/setup_20.x) | sudo -E bash -
+sudo apt-get install -y nodejs
 ```
 
-Please note that you may have to use armv6l instead of arm7l if you have an early Raspberry Pi model.
+_(This automatically installs the correct architecture build (e.g., `arm64`/`aarch64` for Pi 5 or `armhf` for older models) and includes npm)._
 
-### References
+## References
 
 [1]: Node.js download - https://nodejs.org/en/download/
 
 [2]: BCM2835 - http://www.airspayce.com/mikem/bcm2835/
 
-[3]: Node.js native addon build tool - https://github.com/TooTallNate/node-gyp
+[3]: libgpiod - https://git.kernel.org/pub/scm/libs/libgpiod/libgpiod.git/
 
-[4]: GPIO: Raspbery Pi Models A and B - https://www.raspberrypi.org/documentation/usage/gpio/
+[4]: Node.js native addon build tool - https://github.com/TooTallNate/node-gyp
