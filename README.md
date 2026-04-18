@@ -62,7 +62,7 @@ This sample queries a DHT11 sensor connected to the GPIO 4 and prints out the re
 ```javascript
 var sensor = require("node-dht-sensor");
 
-sensor.read(11, 4, function(err, temperature, humidity) {
+sensor.read(11, 4, function (err, temperature, humidity) {
   if (!err) {
     console.log(`temp: ${temperature}°C, humidity: ${humidity}%`);
   }
@@ -86,30 +86,30 @@ var app = {
     {
       name: "Indoor",
       type: 11,
-      pin: 17
+      pin: 17,
     },
     {
       name: "Outdoor",
       type: 22,
-      pin: 4
-    }
+      pin: 4,
+    },
   ],
-  read: function() {
+  read: function () {
     for (var sensor in this.sensors) {
       var readout = sensorLib.read(
         this.sensors[sensor].type,
-        this.sensors[sensor].pin
+        this.sensors[sensor].pin,
       );
       console.log(
         `[${this.sensors[sensor].name}] ` +
           `temperature: ${readout.temperature.toFixed(1)}°C, ` +
-          `humidity: ${readout.humidity.toFixed(1)}%`
+          `humidity: ${readout.humidity.toFixed(1)}%`,
       );
     }
-    setTimeout(function() {
+    setTimeout(function () {
       app.read();
     }, 2000);
-  }
+  },
 };
 
 app.read();
@@ -130,15 +130,15 @@ sensor.initialize(22, 17);
 // var readout = sensor.readSync(22, 4);
 
 sensor.read(22, 17).then(
-  function(res) {
+  function (res) {
     console.log(
       `temp: ${res.temperature.toFixed(1)}°C, ` +
-        `humidity: ${res.humidity.toFixed(1)}%`
+        `humidity: ${res.humidity.toFixed(1)}%`,
     );
   },
-  function(err) {
+  function (err) {
     console.error("Failed to read sensor data:", err);
-  }
+  },
 );
 ```
 
@@ -152,7 +152,7 @@ async function exec() {
     const res = await sensor.read(22, 4);
     console.log(
       `temp: ${res.temperature.toFixed(1)}°C, ` +
-        `humidity: ${res.humidity.toFixed(1)}%`
+        `humidity: ${res.humidity.toFixed(1)}%`,
     );
   } catch (err) {
     console.error("Failed to read sensor data:", err);
@@ -173,20 +173,20 @@ sensor.initialize({
   test: {
     fake: {
       temperature: 21,
-      humidity: 60
-    }
-  }
+      humidity: 60,
+    },
+  },
 });
 ```
 
 After initialization, we can call the `read` method as usual.
 
 ```javascript
-sensor.read(22, 4, function(err, temperature, humidity) {
+sensor.read(22, 4, function (err, temperature, humidity) {
   if (!err) {
     console.log(
       `temp: ${temperature.toFixed(1)}°C, ` +
-        `humidity: ${humidity.toFixed(1)}%`
+        `humidity: ${humidity.toFixed(1)}%`,
     );
   }
 });

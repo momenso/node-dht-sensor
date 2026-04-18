@@ -12,9 +12,9 @@ describe("Initialize", () => {
         test: {
           fake: {
             temperature: 42,
-            humidity: 72
-          }
-        }
+            humidity: 72,
+          },
+        },
       });
     });
     it("should fail when initializing fake readout without temperature value", () => {
@@ -23,13 +23,13 @@ describe("Initialize", () => {
           sensor.initialize({
             test: {
               fake: {
-                humidity: 60
-              }
-            }
+                humidity: 60,
+              },
+            },
           });
         },
         Error,
-        "Test mode: temperature value must be defined for a fake"
+        "Test mode: temperature value must be defined for a fake",
       );
     });
     it("should fail when initializing fake readout without humidity value", () => {
@@ -38,13 +38,13 @@ describe("Initialize", () => {
           sensor.initialize({
             test: {
               fake: {
-                temperature: 17
-              }
-            }
+                temperature: 17,
+              },
+            },
           });
         },
         Error,
-        "Test mode: humidity value must be defined for a fake"
+        "Test mode: humidity value must be defined for a fake",
       );
     });
   });
@@ -55,7 +55,7 @@ describe("Initialize", () => {
           sensor.initialize(0, 0);
         },
         TypeError,
-        "Specified sensor type is not supported"
+        "Specified sensor type is not supported",
       );
     });
     it("should initialize with valid sensor type and GPIO pin", () => {
@@ -72,7 +72,7 @@ describe("Initialize", () => {
           sensor.initialize("11", 0);
         },
         TypeError,
-        "Invalid arguments"
+        "Invalid arguments",
       );
     });
     it("should fail when GPIO pin is not numeric", () => {
@@ -81,7 +81,7 @@ describe("Initialize", () => {
           sensor.initialize(SENSOR_TYPE, "4");
         },
         TypeError,
-        "Invalid arguments"
+        "Invalid arguments",
       );
     });
     it("should fail when maxRetries is not numeric", () => {
@@ -90,7 +90,7 @@ describe("Initialize", () => {
           sensor.initialize(SENSOR_TYPE, GPIO_PIN, "abc");
         },
         TypeError,
-        "Invalid maxRetries parameter"
+        "Invalid maxRetries parameter",
       );
     });
   });
@@ -116,7 +116,7 @@ describe("Read sensor", () => {
         "temperature",
         "humidity",
         "isValid",
-        "errors"
+        "errors",
       ]);
     });
     it("should return a readout when sensor type and GPIO pin are provided", () => {
@@ -126,7 +126,7 @@ describe("Read sensor", () => {
         "temperature",
         "humidity",
         "isValid",
-        "errors"
+        "errors",
       ]);
     });
     it("should fail when invalid sensor type is specified", () => {
@@ -135,12 +135,12 @@ describe("Read sensor", () => {
           sensor.read(3, GPIO_PIN);
         },
         TypeError,
-        "specified sensor type is invalid"
+        "specified sensor type is invalid",
       );
     });
   });
   describe("Asynchronously", () => {
-    it("should obtain temperature and humidity", done => {
+    it("should obtain temperature and humidity", (done) => {
       sensor.read(SENSOR_TYPE, GPIO_PIN, (err, temperature, humidity) => {
         assert.notExists(err);
         assert.isNumber(temperature);
@@ -148,15 +148,15 @@ describe("Read sensor", () => {
         done();
       });
     });
-    it("should fail when invalid sensor type is specified", done => {
-      sensor.read(3, GPIO_PIN, err => {
+    it("should fail when invalid sensor type is specified", (done) => {
+      sensor.read(3, GPIO_PIN, (err) => {
         assert.exists(err);
         assert.throws(
           () => {
             assert.ifError(err, "sensor type is invalid");
           },
           Error,
-          "sensor type is invalid"
+          "sensor type is invalid",
         );
         done();
       });
@@ -166,7 +166,7 @@ describe("Read sensor", () => {
     it("should obtain temperature and humidity", async () => {
       const { temperature, humidity } = await psensor.read(
         SENSOR_TYPE,
-        GPIO_PIN
+        GPIO_PIN,
       );
       assert.isNumber(temperature);
       assert.isNumber(humidity);
@@ -181,7 +181,7 @@ describe("Read sensor", () => {
             assert.ifError(err, "sensor type is invalid");
           },
           Error,
-          "sensor type is invalid"
+          "sensor type is invalid",
         );
       }
     });
@@ -193,7 +193,7 @@ describe("Read sensor", () => {
           sensor.read(1, 2, 3, 4);
         },
         TypeError,
-        "invalid number of arguments"
+        "invalid number of arguments",
       );
     });
   });

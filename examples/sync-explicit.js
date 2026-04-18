@@ -20,7 +20,7 @@ var gpioPin = parseInt(process.argv[3], 10);
 var repeats = parseInt(process.argv[4] || "10", 10);
 var count = 0;
 
-var iid = setInterval(function() {
+var iid = setInterval(function () {
   if (++count >= repeats) {
     clearInterval(iid);
   }
@@ -32,6 +32,6 @@ var iid = setInterval(function() {
       `humidity: ${readout.humidity.toFixed(1)}%, ` +
       `valid: ${readout.isValid}, ` +
       `errors: ${readout.errors}, ` +
-      `time: ${end - start}ms`
+      `time: ${end - start}ms`,
   );
 }, 2500);
