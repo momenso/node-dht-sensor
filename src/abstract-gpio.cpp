@@ -155,7 +155,10 @@ static gpiod_line_request* getLineRequest(int pin)
     gpiod_line_config_free(line_cfg);
     gpiod_line_settings_free(settings);
 
-    lastDirection[pin] = GPIO_IN;
+    if (requests[pin] != NULL)
+    {
+      lastDirection[pin] = GPIO_OUT;
+    }
   }
 
   return requests[pin];
@@ -163,29 +166,20 @@ static gpiod_line_request* getLineRequest(int pin)
 #else
 static gpiod_line* getLine(int pin, GpioDirection direction)
 {
+  // For libgpiod < 1.5 compatibility, release and re-request to change direction
+  if (lines[pin] != NULL && lastDirection[pin] != direction)
+  {
+    gpiod_line_release(lines[pin]);
+    lines[pin] = NULL;
+  }
+
   if (lines[pin] == NULL)
   {
     lines[pin] = gpiod_chip_get_line(theChip, pin);
-    if (direction == GPIO_IN)
-    {
-      gpiod_line_request_input(lines[pin], "node-dht-sensor");
-    }
-    else
-    {
-      gpiod_line_request_output(lines[pin], "node-dht-sensor", 0);
-    }
-    lastDirection[pin] = direction;
-  }
-  else if (lastDirection[pin] != direction)
-  {
-    if (direction == GPIO_IN)
-    {
-      gpiod_line_set_direction_input(lines[pin]);
-    }
-    else
-    {
-      gpiod_line_set_direction_output(lines[pin], 0);
-    }
+    if (lines[pin] == NULL) return NULL;
+
+    if (direction == GPIO_IN) { gpiod_line_request_input(lines[pin], "node-dht-sensor"); }
+    else { gpiod_line_request_output(lines[pin], "node-dht-sensor", 0); }
     lastDirection[pin] = direction;
   }
   return lines[pin];
@@ -200,20 +194,20 @@ void gpioWrite(int pin, GpioPinState state)
   {
     #ifdef USE_LIBGPIOD
     #ifdef GPIOD_V2
-    gpiod_line_request_set_value(
-      getLineRequest(pin),
-      pin,
-      state == GPIO_LOW ?
-        GPIOD_LINE_VALUE_INACTIVE : GPIOD_LINE_VALUE_ACTIVE
-    );
-    lastDirection[pin] = GPIO_OUT;
+    gpiod_line_request *req = getLineRequest(pin);
+    if (req != NULL)
+    {
+      gpiod_line_request_set_value(req, pin, state == GPIO_LOW ? GPIOD_LINE_VALUE_INACTIVE : GPIOD_LINE_VALUE_ACTIVE);
+      lastDirection[pin] = GPIO_OUT;
+    }
     #else
-    gpiod_line_set_value(
-      getLine(pin, GPIO_OUT),
-      state == GPIO_LOW ? 0 : 1
-    );
+    gpiod_line *line = getLine(pin, GPIO_OUT);
+    if (line != NULL)
+    {
+      gpiod_line_set_value(line, state == GPIO_LOW ? 0 : 1);
+    }
     #endif
-    #endif // USE_LIBGPIOD
+    #endif
   }
   else
   {
@@ -232,17 +226,43 @@ GpioPinState gpioRead(int pin)
   {
     #ifdef USE_LIBGPIOD
     #ifdef GPIOD_V2
+    gpiod_line_request *req = getLineRequest(pin);
+    if (req == NULL)
+    {
+      return GPIO_HIGH; // Failsafe on hardware lock
+    }
+
     if (lastDirection[pin] == GPIO_OUT)
     {
-      gpiod_line_request_set_value(getLineRequest(pin), pin, GPIOD_LINE_VALUE_ACTIVE);
+      gpiod_line_request_set_value(req, pin, GPIOD_LINE_VALUE_ACTIVE);
       lastDirection[pin] = GPIO_IN;
     }
-    int val = gpiod_line_request_get_value(getLineRequest(pin), pin);
+
+    int val = gpiod_line_request_get_value(req, pin);
+
+    // Explicitly handle read error (-1) by returning idle line state
+    if (val == -1)
+    {
+      return GPIO_HIGH;
+    }
     return val == GPIOD_LINE_VALUE_INACTIVE ? GPIO_LOW : GPIO_HIGH;
+
     #else
-    return gpiod_line_get_value(getLine(pin, GPIO_IN)) == 0 ? GPIO_LOW : GPIO_HIGH;
+    gpiod_line *line = getLine(pin, GPIO_IN);
+    if (line == NULL)
+    {
+      return GPIO_HIGH; // Failsafe
+    }
+
+    int val = gpiod_line_get_value(line);
+    if (val == -1)
+    {
+      return GPIO_HIGH;
+    }
+    return val == 0 ? GPIO_LOW : GPIO_HIGH;
+
     #endif
-    #endif // USE_LIBGPIOD
+    #endif
   }
   else
   {
