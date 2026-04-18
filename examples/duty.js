@@ -20,9 +20,9 @@ var count = 0;
 var start = 0;
 var end = 0;
 
-var iid = setInterval(function() {
+var iid = setInterval(function () {
   start = new Date().getTime();
-  sensor.read(sensorType, gpioPin, function(err, temperature, humidity) {
+  sensor.read(sensorType, gpioPin, function (err, temperature, humidity) {
     end = new Date().getTime();
     if (err) {
       console.warn("" + err);
@@ -32,7 +32,7 @@ var iid = setInterval(function() {
         "temperature: %s°C, humidity: %s%%, time: %dms",
         temperature.toFixed(1),
         humidity.toFixed(1),
-        end - start
+        end - start,
       );
       fs.appendFile(
         "log.csv",
@@ -44,7 +44,7 @@ var iid = setInterval(function() {
           "," +
           elapsed +
           "\n",
-        function(err) {}
+        function (err) {},
       );
     }
   });

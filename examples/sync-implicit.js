@@ -27,7 +27,7 @@ if (!sensor.initialize(sensorType, gpioPin)) {
   return;
 }
 
-var iid = setInterval(function() {
+var iid = setInterval(function () {
   if (++count >= repeats) {
     clearInterval(iid);
   }
@@ -39,6 +39,6 @@ var iid = setInterval(function() {
       `humidity: ${readout.humidity.toFixed(1)}%, ` +
       `valid: ${readout.isValid}, ` +
       `errors: ${readout.errors}, ` +
-      `time: ${end - start}ms`
+      `time: ${end - start}ms`,
   );
 }, 2500);

@@ -4,12 +4,12 @@ sensor.initialize({
   test: {
     fake: {
       temperature: 21,
-      humidity: 60
-    }
-  }
+      humidity: 60,
+    },
+  },
 });
 
-sensor.read(22, 4, function(err, temperature, humidity) {
+sensor.read(22, 4, function (err, temperature, humidity) {
   if (!err) {
     console.log(
       "temp: " +
@@ -17,7 +17,7 @@ sensor.read(22, 4, function(err, temperature, humidity) {
         "°C, " +
         "humidity: " +
         humidity.toFixed(1) +
-        "%"
+        "%",
     );
   }
 });
