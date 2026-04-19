@@ -27,7 +27,7 @@
   "devDependencies": {
     "chai": "^4.2.0",
     "husky": "^9.1.7",
-    "mocha": "^7.1.2",
+    "mocha": "^11.7.5",
     "prettier": "^3.8.3",
     "pretty-quick": "^4.2.2"
   },
