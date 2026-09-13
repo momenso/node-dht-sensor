@@ -2,7 +2,7 @@
 
 A simple node.js module for reading temperature and relative humidity using a compatible DHT sensor.
 
-[![Node.js CI](https://github.com/momenso/node-dht-sensor/workflows/Node.js%20CI/badge.svg?branch=master)](https://github.com/momenso/node-dht-sensor/actions)
+[![Node.js CI](https://github.com/momenso/node-dht-sensor/actions/workflows/nodejs.yml/badge.svg?branch=master)](https://github.com/momenso/node-dht-sensor/actions/workflows/nodejs.yml)
 [![Node version](https://img.shields.io/node/v/node-dht-sensor.svg)](https://www.npmjs.com/package/node-dht-sensor)
 [![npm](https://img.shields.io/npm/v/node-dht-sensor.svg?label=npm%20package)](https://www.npmjs.com/package/node-dht-sensor)
 [![npm](https://img.shields.io/npm/dm/node-dht-sensor.svg)](https://www.npmjs.com/package/node-dht-sensor)
