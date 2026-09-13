@@ -2,7 +2,8 @@
 
 A simple node.js module for reading temperature and relative humidity using a compatible DHT sensor.
 
-![](https://github.com/momenso/node-dht-sensor/workflows/Node.js%20CI/badge.svg)
+[![Node.js CI](https://github.com/momenso/node-dht-sensor/workflows/Node.js%20CI/badge.svg?branch=master)](https://github.com/momenso/node-dht-sensor/actions)
+[![Node version](https://img.shields.io/node/v/node-dht-sensor.svg)](https://www.npmjs.com/package/node-dht-sensor)
 [![npm](https://img.shields.io/npm/v/node-dht-sensor.svg?label=npm%20package)](https://www.npmjs.com/package/node-dht-sensor)
 [![npm](https://img.shields.io/npm/dm/node-dht-sensor.svg)](https://www.npmjs.com/package/node-dht-sensor)
 [![LICENSE](https://img.shields.io/github/license/momenso/node-dht-sensor.svg)](https://github.com/momenso/node-dht-sensor/blob/master/LICENSE)
@@ -233,6 +234,19 @@ If you are interested in enabling trace when building directly from source you c
 ```sh
 node-gyp configure -- -Ddht_verbose=true
 ```
+
+## Running Tests
+
+This project uses Jest for its test suite. Because the tests interact with shared state in a single loaded native C++ addon instance, they must be executed sequentially to prevent state conflicts or fatal crashes.
+
+Always run the tests using the provided npm script, which enforces the required `--runInBand` flag:
+
+```sh
+npm test
+
+```
+
+Do not run `jest` directly or concurrently without this flag, as Jest's default parallel execution will cause the test suite to fail.
 
 ## Appendix A: Quick Node.js installation guide
 
