@@ -55,6 +55,7 @@ You should use sensorType value to match the sensor as follows:
 If the initialization succeeds when you can call the read function to obtain the latest readout from the sensor. Readout values contains a temperature and a humidity property.
 
 ### First Example
+
 ![example1](https://github.com/user-attachments/assets/01bd8cf4-cb08-49e1-bef3-bad89f01e1b5)
 
 This sample queries a DHT11 sensor connected to the GPIO 4 and prints out the result on the console.
@@ -70,6 +71,7 @@ sensor.read(11, 4, function (err, temperature, humidity) {
 ```
 
 ### Multiple Sensors Example
+
 ![example2](https://github.com/user-attachments/assets/0a18fc49-523e-46c7-8c14-95fd28ccaa24)
 
 The following example shows a method for querying multiple sensors connected to the same Raspberry Pi. For this example, we have two sensors:
