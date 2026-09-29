@@ -119,6 +119,14 @@ private:
 
 Napi::Value ReadAsync(const Napi::CallbackInfo &info)
 {
+  Napi::Env env = info.Env();
+
+  if (!info[0].IsNumber() || !info[1].IsNumber() || !info[2].IsFunction())
+  {
+    Napi::TypeError::New(env, "Invalid arguments").ThrowAsJavaScriptException();
+    return env.Undefined();
+  }
+
   int sensor_type = info[0].ToNumber().Uint32Value();
   int gpio_pin = info[1].ToNumber().Uint32Value();
   auto callback = info[2].As<Napi::Function>();
@@ -126,7 +134,7 @@ Napi::Value ReadAsync(const Napi::CallbackInfo &info)
   auto worker = new ReadWorker(callback, sensor_type, gpio_pin);
   worker->Queue();
 
-  return info.Env().Undefined();
+  return env.Undefined();
 }
 
 Napi::Value ReadSync(const Napi::CallbackInfo &info)
@@ -138,6 +146,12 @@ Napi::Value ReadSync(const Napi::CallbackInfo &info)
 
   if (info.Length() == 2)
   {
+    if (!info[0].IsNumber() || !info[1].IsNumber())
+    {
+      Napi::TypeError::New(env, "Invalid arguments").ThrowAsJavaScriptException();
+      return env.Undefined();
+    }
+
     gpio_pin = info[1].ToNumber().Uint32Value();
     // TODO: validate gpio_pin
 
@@ -209,6 +223,11 @@ void SetMaxRetries(const Napi::CallbackInfo &info)
   if (info.Length() != 1)
   {
     Napi::TypeError::New(info.Env(), "Wrong number of arguments").ThrowAsJavaScriptException();
+    return;
+  }
+  if (!info[0].IsNumber())
+  {
+    Napi::TypeError::New(info.Env(), "Invalid arguments").ThrowAsJavaScriptException();
     return;
   }
   _max_retries = info[0].ToNumber().Uint32Value();
