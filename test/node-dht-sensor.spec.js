@@ -159,3 +159,35 @@ describe("Read sensor", () => {
     });
   });
 });
+
+describe("Wrongly-typed arguments", () => {
+  beforeAll(() => {
+    sensor.initialize({ test: { fake: { temperature: 21, humidity: 60 } } });
+  });
+
+  const sym = Symbol("x");
+  const cb = () => {};
+
+  it.each([
+    ["setMaxRetries(Symbol)", () => sensor.setMaxRetries(sym)],
+    ["read(Symbol, pin)", () => sensor.read(sym, 4)],
+    ["read(type, Symbol)", () => sensor.read(11, sym)],
+    ["read(Symbol, pin, cb)", () => sensor.read(sym, 4, cb)],
+    ["read(type, Symbol, cb)", () => sensor.read(11, sym, cb)],
+    ["read(type, pin, 'not a function')", () => sensor.read(11, 4, "cb")],
+    ["read(type, pin, undefined)", () => sensor.read(11, 4, undefined)],
+    ["read('11', pin) numeric string", () => sensor.read("11", 4)],
+    ["setMaxRetries('3') numeric string", () => sensor.setMaxRetries("3")],
+  ])("%s throws a catchable TypeError", (_name, call) => {
+    let err;
+    try {
+      call();
+    } catch (e) {
+      err = e;
+    }
+
+    expect(err).toBeDefined();
+    expect(err.name).toBe("TypeError");
+    expect(err.message).toBe("Invalid arguments");
+  });
+});
