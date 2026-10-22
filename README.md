@@ -56,7 +56,7 @@ If the initialization succeeds when you can call the read function to obtain the
 
 ### First Example
 
-![example1](https://cloud.githubusercontent.com/assets/420851/20246902/1a03bafc-a9a8-11e6-8158-d68928b2e79f.png)
+![example1](https://github.com/user-attachments/assets/01bd8cf4-cb08-49e1-bef3-bad89f01e1b5)
 
 This sample queries a DHT11 sensor connected to the GPIO 4 and prints out the result on the console.
 
@@ -72,7 +72,7 @@ sensor.read(11, 4, function (err, temperature, humidity) {
 
 ### Multiple Sensors Example
 
-![example2](https://cloud.githubusercontent.com/assets/420851/20246914/554d72c4-a9a8-11e6-9162-ae51ecdf4212.png)
+![example2](https://github.com/user-attachments/assets/0a18fc49-523e-46c7-8c14-95fd28ccaa24)
 
 The following example shows a method for querying multiple sensors connected to the same Raspberry Pi. For this example, we have two sensors:
 
